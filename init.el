@@ -34,14 +34,14 @@
 
 ;; do not save backup files in same dir
 (setq
-   backup-by-copying t      ; don't clobber symlinks
-   vc-make-backup-files t   ; backup versioned files as well
-   backup-directory-alist
-    `(("." . ,(f-join user-emacs-directory "backups")))    ; don't litter my fs tree
-   delete-old-versions t
-   kept-new-versions 6
-   kept-old-versions 2
-   version-control t)       ; use versioned backups
+ backup-by-copying t      ; don't clobber symlinks
+ vc-make-backup-files t   ; backup versioned files as well
+ backup-directory-alist
+ `(("." . ,(f-join user-emacs-directory "backups")))    ; don't litter my fs tree
+ delete-old-versions t
+ kept-new-versions 6
+ kept-old-versions 2
+ version-control t)       ; use versioned backups
 
 ;; remove trailing whitespace on save
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
@@ -75,11 +75,14 @@
   (progn
     (use-package idomenu :ensure t)
     (use-package flx-ido :ensure t)
+    (use-package ido-vertical-mode :ensure t)
+    (use-package ido-ubiquitous :ensure t)
 
     (ido-mode t)
-    (ido-everywhere 1)
+    (ido-vertical-mode +1)
+    (ido-ubiquitous-mode +1)
     (flx-ido-mode +1)
-    (icomplete-mode 1)
+    (icomplete-mode +1)
 
     (setq ido-enable-flex-matching t
 	  ;; disable ido faces to see flx highlights.
@@ -87,8 +90,9 @@
 	  ido-enable-prefix nil
 	  ido-create-new-buffer 'always
 	  ido-max-prospects 10
+
 	  ido-default-file-method 'selected-window
-	  ido-everywhere) 1))
+	  ido-everywhere 1)))
 
 (use-package recentf
   :config
@@ -185,6 +189,7 @@ and so on."
       (insert " ")
       (forward-char -1))
 
+    (key-chord-define paredit-mode-map "()" #'paredit-backward-up)
     (bind-keys
      :map paredit-mode-map
      ("M-<left>"  . backward-word)
@@ -222,32 +227,38 @@ and so on."
      ("C-M-p"     . paredit-backward-down)
      ("C-M-u"     . paredit-backward-up)
      ("M-T"       . transpose-sexps)
-     ("C-M-k"     . live-paredit-copy-sexp-at-point))))
+     ("C-M-k"     . live-paredit-copy-sexp-at-point))
 
-(use-package projectile
-  :ensure t
-  :config
-  (progn
-    (use-package ack-and-a-half :ensure t)
-    (projectile-global-mode +1)
-    (setq projectile-cache-file (f-tmp-file "projectile" "projectile.cache"))
-    (setq projectile-known-projects-file (f-tmp-file "projectile" "projectile-bookmarks.eld"))
-    (setq projectile-mode-line-lighter "P")
-    (setq projectile-mode-line "P") ;; smart modeline already shows the current projectile project
-    (setq projectile-completion-system 'ido)))
+    (use-package projectile
+      :ensure t
+      :config
+      (progn
+	(use-package ack-and-a-half :ensure t)
+	(projectile-global-mode +1)
+	(setq projectile-cache-file (f-tmp-file "projectile" "projectile.cache"))
+	(setq projectile-known-projects-file (f-tmp-file "projectile" "projectile-bookmarks.eld"))
+	(setq projectile-mode-line-lighter "P")
+	(setq projectile-mode-line "P") ;; smart modeline already shows the current projectile project
+	(setq projectile-completion-system 'ido)
 
-;; selection framework
-(use-package helm
-  :ensure t
-  :bind (("M-y" . helm-show-kill-ring)
-	 ("C-x C-b" . helm-buffers-list))
-  :config
-  (progn
-    (require 'helm-ring)
-    (require 'helm-source)
-    (require 'helm-config)
-    (require 'helm-adaptive)
-    (setq helm-adaptive-history-file (f-tmp-file "helm" "adaptive-history"))))
+	(bind-keys
+	 :map projectile-mode-map
+	 ("C-c p p" . projectile-switch-project))
+
+	)))
+
+  ;; selection framework
+  (use-package helm
+    :ensure t
+    :bind (("M-y" . helm-show-kill-ring)
+	   ("C-x C-b" . helm-buffers-list))
+    :config
+    (progn
+      (require 'helm-ring)
+      (require 'helm-source)
+      (require 'helm-config)
+      (require 'helm-adaptive)
+      (setq helm-adaptive-history-file (f-tmp-file "helm" "adaptive-history")))))
 
 ;; completion framework
 (use-package company
@@ -264,6 +275,8 @@ and so on."
 	  company-async-timeout 0.5
 	  ;; select using super+number
 	  company-show-numbers t
+	  ;; dont downcase completions
+	  company-dabbrev-downcase nil
 	  company-transformers '(company-sort-by-occurrence company-sort-by-backend-importance))
     (dotimes (i 10)
       (define-key company-mode-map (read-kbd-macro (format "s-%d" i)) 'company-complete-number))))
@@ -666,3 +679,26 @@ If invoked with a PREFIX argument, print the result in the current buffer."
 ;; start the server so clients can connect to it
 (require 'server)
 (if (not (server-running-p)) (server-start))
+
+
+(use-package geiser
+  :ensure t
+  :commands (run-racket run-geiser geiser-mode)
+  :config
+  (progn
+
+    (defun geiser-save-and-load-buffer ()
+      (interactive)
+      (save-buffer)
+      (geiser-load-current-buffer))
+
+    (require 'geiser)
+    (bind-keys
+     :map geiser-mode-map
+     ("C-c m b" . geiser-save-and-load-buffer))))
+
+(use-package hideshowvis
+
+  :config
+  (progn
+    (define-key hs-minor-mode-map (kbd "M-±") #'hs-toggle-hiding)))
