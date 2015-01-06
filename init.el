@@ -54,8 +54,8 @@
 ;; undo/redo window configurations
 (use-package winner
   :config (winner-mode 1)
-  :bind (("C-c C-b" . winner-undo)
-	 ("C-c C-f" . winner-redo)))
+  :bind (("C-c b" . winner-undo)
+	 ("C-c f" . winner-redo)))
 
 ;; better M-x
 (use-package smex
@@ -447,6 +447,10 @@ restart the server."
       (kbd "C-c C-3")
       'synth-toggle-clojure-ignore-next-form)
 
+    (define-key cider-mode-map
+      (kbd "C-c p p")
+      'synth-toggle-clojure-ignore-next-form)
+
     (defun cider-namespace-refresh ()
       (interactive)
       (save-buffer)
@@ -693,12 +697,18 @@ If invoked with a PREFIX argument, print the result in the current buffer."
       (geiser-load-current-buffer))
 
     (require 'geiser)
-    (bind-keys
-     :map geiser-mode-map
-     ("C-c m b" . geiser-save-and-load-buffer))))
+    ;;
+    ;; (bind-keys
+    ;;  :map 'geiser-mode-map
+    ;;  ("C-c m b" . geiser-save-and-load-buffer))
 
-(use-package hideshowvis
+    ))
 
+(use-package hideshow
   :config
   (progn
-    (define-key hs-minor-mode-map (kbd "M-±") #'hs-toggle-hiding)))
+    (define-key hs-minor-mode-map (kbd "M-±") #'hs-toggle-hiding)
+    (use-package hideshowvis)
+    (hideshowvis-enable)
+
+    ))
