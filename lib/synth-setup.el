@@ -56,6 +56,9 @@
 (setq mac-command-modifier 'super)
 (setq mac-function-modifier 'command)
 
+
+(setq ring-bell-function 'ignore)
+
 (setq max-lisp-eval-depth 10000)
 (set-variable 'max-specpdl-size 5000)
 ;; initiate GC every 20 mb allocated

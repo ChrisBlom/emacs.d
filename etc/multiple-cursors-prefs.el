@@ -3,18 +3,46 @@
 
 (setq mc/cmds-to-run-for-all
       '(
-	electric-newline-and-maybe-indent
+	backward-delete-char
+	browse-kill-ring
+	cider-eval-defun-at-point
+	cljr-cycle-coll
+	cua-copy-region
+	cua-paste
+	eval-defun
+	eval-last-sexp
 	indent-for-tab-command
-	kill-region
 	live-paredit-forward-kill-sexp
+	org-delete-char
+	org-self-insert-command
 	paredit-backward-kill-word
+	paredit-close-round
+	paredit-comment-dwim
+	paredit-doublequote
 	paredit-forward-delete
 	paredit-forward-slurp-sexp
+	paredit-forward-up
+	paredit-join-sexps
+	paredit-kill
 	paredit-newline
+	paredit-open-curly
 	paredit-open-round
+	paredit-open-square
+	paredit-semicolon
 	paredit-splice-sexp-killing-backward
+	paredit-splice-sexp-killing-forward
+	transpose-sexps
+	yas-expand
 	))
 
 (setq mc/cmds-to-run-once
       '(
+	kill-region
+	live-delete-whitespace-except-one
+	markdown-exdent-or-delete
+	mc/mark-next-like-this-repeat
+	mc/mark-previous-like-this-repeat
+	mouse-drag-secondary
+	repeat
+	smex
 	))

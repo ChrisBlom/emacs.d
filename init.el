@@ -33,15 +33,14 @@
     tmp-file))
 
 ;; do not save backup files in same dir
-(setq
- backup-by-copying t      ; don't clobber symlinks
- vc-make-backup-files t   ; backup versioned files as well
- backup-directory-alist
- `(("." . ,(f-join user-emacs-directory "backups")))    ; don't litter my fs tree
- delete-old-versions t
- kept-new-versions 6
- kept-old-versions 2
- version-control t)       ; use versioned backups
+(setq backup-by-copying t      ; don't clobber symlinks
+      vc-make-backup-files t   ; backup versioned files as well
+      backup-directory-alist
+      `(("." . ,(f-join user-emacs-directory "backups")))    ; don't litter my fs tree
+      delete-old-versions t
+      kept-new-versions 6
+      kept-old-versions 2
+      version-control t)       ; use versioned backups
 
 ;; remove trailing whitespace on save
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
@@ -53,7 +52,7 @@
 
 ;; undo/redo window configurations
 (use-package winner
-  :config (winner-mode 1)
+  :config (winner-mode +1)
   :bind (("C-c b" . winner-undo)
 	 ("C-c f" . winner-redo)))
 
@@ -95,10 +94,10 @@
 	  ido-everywhere 1)))
 
 (use-package recentf
+  :pre-load (setq recentf-save-file (f-tmp-file "recentf.el"))
   :config
   (progn
-    (setq recentf-save-file (f-tmp-file "recentf.el")
-	  recentf-max-saved-items 50)
+    (setq recentf-max-saved-items 300)
     (recentf-mode t)
     (defun ido-recentf-open ()
       "Use `ido-completing-read' to \\[find-file] a recent file"
@@ -158,11 +157,20 @@ and so on."
     (global-set-key (kbd "M-]") 'er/expand-region)
     (global-set-key (kbd "M-[") 'er/contract-region)))
 
+
+
+
 (use-package multiple-cursors
   :ensure t
+  :pre-load (setq mc/list-file (f-join user-emacs-directory "etc" "multiple-cursors-prefs.el"))
   :config
   (progn
-    (setq mc/list-file (f-join user-emacs-directory "etc" "multiple-cursors-prefs.el"))
+
+    (bind-keys
+     ("C-c m h" . mc-hide-unmatched-lines-mode)
+     ("C-c m a" . mc/mark-all-like-this-dwim)
+     ("C-c m d" . mc/mark-all-symbols-like-this-in-defun))
+
     (global-set-key (kbd "s-]") 'mc/mark-next-like-this)
     (global-set-key (kbd "s-[") 'mc/mark-previous-like-this)
     (global-set-key (kbd "s-{") 'mc/unmark-previous-like-this)
@@ -227,38 +235,49 @@ and so on."
      ("C-M-p"     . paredit-backward-down)
      ("C-M-u"     . paredit-backward-up)
      ("M-T"       . transpose-sexps)
-     ("C-M-k"     . live-paredit-copy-sexp-at-point))
+     ("C-M-k"     . live-paredit-copy-sexp-at-point))))
 
-    (use-package projectile
-      :ensure t
-      :config
-      (progn
-	(use-package ack-and-a-half :ensure t)
-	(projectile-global-mode +1)
-	(setq projectile-cache-file (f-tmp-file "projectile" "projectile.cache"))
-	(setq projectile-known-projects-file (f-tmp-file "projectile" "projectile-bookmarks.eld"))
-	(setq projectile-mode-line-lighter "P")
-	(setq projectile-mode-line "P") ;; smart modeline already shows the current projectile project
-	(setq projectile-completion-system 'ido)
+(use-package ag :ensure t)
 
-	(bind-keys
-	 :map projectile-mode-map
-	 ("C-c p p" . projectile-switch-project))
+;; selection framework
 
-	)))
+(use-package helm
+  :ensure t
+  :bind (("M-y" . helm-show-kill-ring)
+	 ("C-x C-b" . helm-buffers-list)
+	 ("C-c h o" . helm-occur)
+	 ("C-c h m" . helm-mark-ring)
+	 ("C-c h a" . helm-ag)
+	 ("C-c h b" . helm-buffers-list)
+	 ("C-c h i" . helm-imenu))
+  :config
+  (progn
+    (use-package helm-ag :ensure t)
+    (require 'helm-ring)
+    (require 'helm-source)
+    (require 'helm-config)
+    (require 'helm-adaptive)
+    (setq helm-adaptive-history-file (f-tmp-file "helm" "adaptive-history"))))
 
-  ;; selection framework
-  (use-package helm
-    :ensure t
-    :bind (("M-y" . helm-show-kill-ring)
-	   ("C-x C-b" . helm-buffers-list))
-    :config
-    (progn
-      (require 'helm-ring)
-      (require 'helm-source)
-      (require 'helm-config)
-      (require 'helm-adaptive)
-      (setq helm-adaptive-history-file (f-tmp-file "helm" "adaptive-history")))))
+(use-package projectile
+  :ensure t
+  :pre-load
+  (setq projectile-known-projects-file (f-tmp-file "projectile" "projectile-bookmarks.eld"))
+  :config
+  (progn
+    (use-package ack-and-a-half :ensure t)
+    (projectile-global-mode +1)
+    (setq projectile-cache-file (f-tmp-file "projectile" "projectile.cache"))
+    (setq projectile-mode-line-lighter "P")
+    (setq projectile-mode-line "P") ;; smart modeline already shows the current projectile project
+    (setq projectile-completion-system 'ido)
+
+    (bind-keys
+     :map projectile-command-map
+     ("s s" . helm-projectile-ag)
+     ("s g" . helm-projectile-grep)
+     ("s a" . helm-projectile-ack))))
+
 
 ;; completion framework
 (use-package company
@@ -299,11 +318,11 @@ and so on."
 ;; disable debugging when loading is done
 (setq debug-on-error nil)
 
-(load-theme 'synth t)
+;(load-theme 'synth t)
 
 (use-package git-gutter
   :ensure t
-  :diminish "+-"
+  :diminish "±"
   :config
   (progn
     (git-gutter-mode +1)
@@ -338,29 +357,43 @@ and so on."
   (add-hook 'emacs-lisp-mode-hook
 	    (lambda () (elisp-slime-nav-mode t))))
 
-(use-package lisp-mode
-  :config
-  (add-hook 'emacs-lisp-mode-hook
-	    (lambda ()
-	      (paredit-mode +1)
-	      (yas-minor-mode +1)
-	      (elisp-slime-nav-mode +1))))
+(add-hook 'emacs-lisp-mode-hook
+	  (lambda ()
+	    (prettify-symbols-mode +1)
+	    (paredit-mode +1)
+	    (yas-minor-mode +1)
+	    (elisp-slime-nav-mode +1)))
 
 (use-package clojure-mode
   :ensure t
   :commands clojure-mode
   :config
   (progn
+    (use-package clojure-mode-extra-font-locking :ensure t)
+    (use-package align-cljlet :ensure t)
+
+    (defun synth-toggle-clojure-ignore-next-form ()
+      "toggle #_"
+      (interactive)
+      (save-excursion
+	(goto-char (1- (paredit-point-at-sexp-start)))
+	(if (char-equal ?_  (preceding-char))
+	    (delete-backward-char 2)
+	  (insert-string "#_"))))
+
     (define-key clojure-mode-map (kbd "C-c C-j") 'cider-jack-in)
+    (define-key clojure-mode-map
+      (kbd "C-c C-3")
+      'synth-toggle-clojure-ignore-next-form)
+
     (add-hook 'clojure-mode-hook
 	      (lambda ()
 		(eldoc-mode +1)
 		(paredit-mode +1)
-		(prettify-symbols-mode +1)
+		(aggressive-indent-mode +1)
 		(yas-minor-mode +1)
-		(use-package clojure-mode-extra-font-locking :ensure t)
-		(use-package align-cljlet :ensure t)
 		(setq buffer-save-without-query t)
+		(prettify-symbols-mode +1)
 		(auto-highlight-symbol-mode +1)
 		(push '(">=" . ?≥) prettify-symbols-alist)
 		(push '("comp" . ?○) prettify-symbols-alist)))))
@@ -400,15 +433,15 @@ and so on."
 
     (setq cider-popup-stacktraces t
 	  cider-popup-stacktraces-in-repl t
-	  cider-show-error-buffer nil
+	  cider-show-error-buffer t
 	  cider-auto-select-error-buffer nil
 	  cider-auto-jump-to-error nil
 	  cider-test-show-report-on-success nil
-	  cider-repl-use-clojure-font-lock t
+	  cider-repl-use-clojure-font-lock nil
 	  nrepl-log-messages nil
 	  cider-prompt-save-file-on-load nil
 	  cider-lein-command "lein"
-	  cider-lein-parameters "with-profile power repl"
+	  cider-lein-parameters "with-profile +power repl"
 	  nrepl-port "4555")
 
     ;; jump to repl buffer on connect cider-repl-pop-to-buffer-on-connect t
@@ -434,39 +467,15 @@ restart the server."
 
     (require 'paredit)
 
-    (defun synth-toggle-clojure-ignore-next-form ()
-      "toggle #_"
-      (interactive)
-      (save-excursion
-	(goto-char (1- (paredit-point-at-sexp-start)))
-	(if (char-equal ?_  (preceding-char))
-	    (delete-backward 2)
-	  (insert-string "#_"))))
-
-    (define-key clojure-mode-map
-      (kbd "C-c C-3")
-      'synth-toggle-clojure-ignore-next-form)
-
-    (define-key cider-mode-map
-      (kbd "C-c p p")
-      'synth-toggle-clojure-ignore-next-form)
-
-    (defun cider-namespace-refresh ()
-      (interactive)
-      (save-buffer)
-      (cider-interactive-eval
-       "(require 'clojure.tools.namespace.repl)
-    (if (resolve 'reload)
-        (clojure.tools.namespace.repl/refresh :after `reload)
-        (clojure.tools.namespace.repl/refresh))"))
-
     (defun clear-message-buffer ()
       "Find the messages buffer and clear it.
-  Returns to the buffer in which the command was invoked."
+       Returns to the buffer in which the command was invoked."
       (interactive)
       (let ((origin-buffer (current-buffer)))
 	(switch-to-buffer "*Messages*")
+	(read-only-mode -1)
 	(erase-buffer)
+	(read-only-mode +1)
 	(switch-to-buffer origin-buffer)))
 
     (defun cider-clear-and-eval-defun-at-point ()
@@ -507,7 +516,7 @@ If invoked with a PREFIX argument, print the result in the current buffer."
      ("M-RET"     . cider-doc)
      ("C-c t t"   . cider-test-run-tests)
      ("C-c C-j"   . cider-jack-in)
-     ("C-c C-p"   . nil)
+     ("C-c p-p"   . nil)
      ("C-c n e b" . cider-eval-buffer)
      ("C-c m b"   . cider-eval-buffer)
      ;;     ("M-?"       . ac-nrepl-popup-doc) ;; TODO  find alternative
@@ -518,9 +527,6 @@ If invoked with a PREFIX argument, print the result in the current buffer."
     (define-key cider-repl-mode-map (kbd "C-c C-o") 'cider-repl-clear-buffer)
     (define-key cider-repl-mode-map (kbd "M-?") 'ac-nrepl-popup-doc)
     (define-key clojure-mode-map (kbd "C->") 'cljr-cycle-coll)
-
-
-
 
     (define-key clojure-mode-map (kbd "C-c C-j") 'cider-jack-in)
 
@@ -561,8 +567,7 @@ If invoked with a PREFIX argument, print the result in the current buffer."
       (outline-previous-visible-heading 2)
       (cider-eval-defun-at-point))
 
-    (define-key cider-mode-map (kbd "C-c n n") 'cider-eval-and-move-next)
-    (define-key cider-mode-map (kbd "C-c p p") (make-repeatable-command 'cider-eval-and-move-previous))))
+    (define-key cider-mode-map (kbd "C-c n n") 'cider-eval-and-move-next)))
 
 
 (defun live-lisp-describe-thing-at-point ()
@@ -622,7 +627,7 @@ If invoked with a PREFIX argument, print the result in the current buffer."
  ;; If there is more than one, they won't work right.
  '(custom-safe-themes
    (quote
-    ("9f2d4c071cb97f7c40f6cbc917183adab0cb631f28c540c07da411514bbb3eb7" "b611e26d8b8db41b2859a002f4be1899969a65c0f498de0350eb3957b7471def" "6308a012ffc059bf91f7c1f36d51901d84a032d94f6fc70c2b6bd630ce136502" "6a37be365d1d95fad2f4d185e51928c789ef7a4ccf17e7ca13ad63a8bf5b922f" default)))
+    ("edf4b6400f473455e9af1b8f205ab2c1625a839ab5cabb1272cd4c78f0188710" "9f2d4c071cb97f7c40f6cbc917183adab0cb631f28c540c07da411514bbb3eb7" "b611e26d8b8db41b2859a002f4be1899969a65c0f498de0350eb3957b7471def" "6308a012ffc059bf91f7c1f36d51901d84a032d94f6fc70c2b6bd630ce136502" "6a37be365d1d95fad2f4d185e51928c789ef7a4ccf17e7ca13ad63a8bf5b922f" default)))
  '(display-buffer-base-action (quote (display-buffer-reuse-window (reusable-frames . t)))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
@@ -640,8 +645,6 @@ If invoked with a PREFIX argument, print the result in the current buffer."
     (add-to-list 'yas-snippet-dirs
 		 (f-join user-emacs-directory "etc" "snippets"))))
 
-(load-theme 'synth t)
-
 (use-package platform-osx)
 
 (use-package dockerfile-mode
@@ -657,10 +660,10 @@ If invoked with a PREFIX argument, print the result in the current buffer."
 (use-package synth-bindings)
 
 (use-package eval-pulse
-  :init
-  (setq eval-pulse-depth 1)
   :config
-  (setq eval-pulse-depth 1))
+  (progn
+    (eval-pulse-mode +1)
+    (setq eval-pulse-depth 1)))
 
 (use-package window-number
   :ensure t )
@@ -697,18 +700,48 @@ If invoked with a PREFIX argument, print the result in the current buffer."
       (geiser-load-current-buffer))
 
     (require 'geiser)
-    ;;
+
+    (push '("lambda"  . ?λ) prettify-symbols-alist)
+
     ;; (bind-keys
     ;;  :map 'geiser-mode-map
     ;;  ("C-c m b" . geiser-save-and-load-buffer))
 
     ))
 
+
+(use-package racket-mode
+  :ensure t
+  :commands (racket-mode)
+  :config
+  (progn
+    (add-hook 'racket-mode-hook
+	      (lambda ()
+		(paredit-mode +1)
+		(eldoc-mode +1)
+		(prettify-symbols-mode +1)
+		(push '("lambda"  . ?λ) prettify-symbols-alist)))
+    (add-to-list 'auto-mode-alist '("\\.rkt\\'" . racket-mode))
+    (bind-keys
+     :map racket-mode-map
+     ("C-c m b" . racket-run))))
+
 (use-package hideshow
   :config
   (progn
     (define-key hs-minor-mode-map (kbd "M-±") #'hs-toggle-hiding)
     (use-package hideshowvis)
-    (hideshowvis-enable)
+    (hideshowvis-enable)))
 
-    ))
+(use-package magit
+  :ensure t
+  :commands magit-status
+  :bind (("C-x m" . magit-status)))
+
+
+(defun gitx ()
+  (interactive)
+  (shell-command "gitx ."))
+
+(use-package markdown-mode
+  :ensure t)

@@ -135,6 +135,16 @@
       (overlay-put o 'face `(:background ,x))
       (sit-for 0.001))))
 
+(defun copy-file-name-to-clipboard ()
+  "Copy the current buffer file name to the clipboard."
+  (interactive)
+  (let ((filename (if (equal major-mode 'dired-mode)
+                      default-directory
+                    (buffer-file-name))))
+    (when filename
+      (kill-new filename)
+      (message "Copied buffer file name '%s' to the clipboard." filename))))
+
 (defun flashy-cider-interactive-eval-handler (ov)
   "Takes an overlay, make an interactive eval handler for BUFFER"
   (lexical-let*
@@ -170,7 +180,6 @@
        (flash o 0.7)
        (delete-overlay o)))))
 
-
 (defun make-flashy-eval-callback ()
   (let*
       ((start  (save-excursion
@@ -181,9 +190,66 @@
     (flash o 0.5)
     (flashy-cider-interactive-eval-handler o)))
 
-(defun flashy-cider-eval-last-sexp ()
+(defun cider-eval-last-sexp ()
   "Evaluate the expression preceding point.
 If invoked with a PREFIX argument, print the result in the current buffer."
   (interactive)
   (cider-interactive-eval (cider-last-sexp)
 			  (make-flashy-eval-callback)))
+
+(require 'nrepl-client)
+
+;; with interrupt handler argL
+(defun nrepl-make-response-handler (buffer value-handler stdout-handler
+                                           stderr-handler done-handler
+                                           &optional eval-error-handler interrupt-handler)
+  "Make a response handler for connection BUFFER.
+A handler is a function that takes one argument - response received from
+the server process.  The response is an alist that contains at least 'id'
+and 'session' keys.  Other standard response keys are 'value', 'out', 'err'
+and 'status'.
+
+The presence of a particular key determines the type of the response.  For
+example, if 'value' key is present, the response is of type 'value', if
+'out' key is present the response is 'stdout' etc.  Depending on the typea,
+the handler dispatches the appropriate value to one of the supplied
+handlers: VALUE-HANDLER, STDOUT-HANDLER, STDERR-HANDLER, DONE-HANDLER, and
+EVAL-ERROR-HANDLER.  If the optional EVAL-ERROR-HANDLER is nil, the default
+`nrepl-err-handler' is used.  If any of the other supplied handlers are nil
+nothing happens for the coresponding type of response.
+
+When `nrepl-log-messages' is non-nil, *nrepl-messages* buffer contains
+server responses."
+  (lambda (response)
+    (nrepl-dbind-response response (value ns out err status id ex root-ex
+                                          session)
+      (cond (value
+             (with-current-buffer buffer
+               (when (and ns (not (derived-mode-p 'clojure-mode)))
+                 (setq nrepl-buffer-ns ns)))
+             (when value-handler
+               (funcall value-handler buffer value)))
+            (out
+             (when stdout-handler
+               (funcall stdout-handler buffer out)))
+            (err
+             (when stderr-handler
+               (funcall stderr-handler buffer err)))
+            (status
+             (when (member "interrupted" status)
+               (message "Evaluation interrupted.")
+	       (when interrupt-handler
+		 (with-current-buffer buffer
+		   (funcall interrupt-handler buffer))))
+             (when (member "eval-error" status)
+               (funcall (or eval-error-handler nrepl-err-handler)
+                        buffer ex root-ex session))
+             (when (member "namespace-not-found" status)
+               (message "Namespace not found."))
+             (when (member "need-input" status)
+               (cider-need-input buffer))
+             (when (member "done" status)
+               (puthash id (gethash id nrepl-pending-requests) nrepl-completed-requests)
+               (remhash id nrepl-pending-requests)
+               (when done-handler
+                 (funcall done-handler buffer))))))))
