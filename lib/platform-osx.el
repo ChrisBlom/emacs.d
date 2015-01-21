@@ -25,6 +25,8 @@
   ;; domain name
   (setq system-name (car (split-string system-name "\\.")))
 
+  (require 's)
+  
   ;; replace spaces with : on osx;
   (setenv "PATH" 
 	  (s-join ":"
