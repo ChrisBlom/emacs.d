@@ -12,6 +12,8 @@
 ;; organized package loading framework
 (require 'use-package)
 
+(use-package platform-osx)
+
 ;; modern list library
 (use-package dash
   :ensure t
