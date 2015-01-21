@@ -11,14 +11,17 @@
 	cua-paste
 	eval-defun
 	eval-last-sexp
+	hs-toggle-hiding
 	indent-for-tab-command
 	live-paredit-forward-kill-sexp
 	org-delete-char
 	org-self-insert-command
+	paredit-backslash
 	paredit-backward-kill-word
 	paredit-close-round
 	paredit-comment-dwim
 	paredit-doublequote
+	paredit-forward-barf-sexp
 	paredit-forward-delete
 	paredit-forward-slurp-sexp
 	paredit-forward-up
