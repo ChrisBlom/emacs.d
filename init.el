@@ -157,7 +157,13 @@ and so on."
   :config
   (progn
     (global-set-key (kbd "M-]") 'er/expand-region)
-    (global-set-key (kbd "M-[") 'er/contract-region)))
+    (global-set-key (kbd "M-[") 'er/contract-region)
+
+    (bind-keys
+     :map global-map
+     ("M-("       . er/contract-region)
+     ("M-)"       . er/expand-region))
+    ))
 
 
 
@@ -204,7 +210,6 @@ and so on."
      :map paredit-mode-map
      ("M-<left>"  . backward-word)
      ("M-<right>" . forward-word)
-     ("M-w"       . live-paredit-backward-kill-sexp)
 
      ("C-("       . paredit-forward-slurp-sexp)
      ("C-)"       . paredit-backward-slurp-sexp)
@@ -222,11 +227,14 @@ and so on."
      ("C-c l j"   . live-paredit-forward-slurp-sexp-neatly)
      ("C-M-j"     . live-paredit-forward-slurp-sexp-neatly)
      ("C-M-z"     . align-cljlet)
+
      ("M-S"       . paredit-split-sexp)
      ("M-s"       . paredit-splice-sexp)
      ("M-j"       . paredit-join-sexps)
+
      ("M-P"       . live-paredit-previous-top-level-form)
      ("M-N"       . live-paredit-next-top-level-form)
+
      ("C-M-f"     . live-paredit-forward)
      ("M-q"       . live-paredit-reindent-defun)
      ("M-d"       . live-paredit-forward-kill-sexp)
@@ -239,16 +247,17 @@ and so on."
      ("M-T"       . transpose-sexps)
      ("C-M-k"     . live-paredit-copy-sexp-at-point))))
 
+;; better grep, requires ag to be installed
 (use-package ag :ensure t)
 
 ;; selection framework
-
 (use-package helm
   :ensure t
   :bind (("M-y" . helm-show-kill-ring)
 	 ("C-x C-b" . helm-buffers-list)
 	 ("C-c h o" . helm-occur)
 	 ("C-c h m" . helm-mark-ring)
+	 ("C-c h x" . helm-M-x)
 	 ("C-c h a" . helm-ag)
 	 ("C-c h b" . helm-buffers-list)
 	 ("C-c h i" . helm-imenu))
@@ -261,6 +270,7 @@ and so on."
     (require 'helm-adaptive)
     (setq helm-adaptive-history-file (f-tmp-file "helm" "adaptive-history"))))
 
+;; project oriented commands
 (use-package projectile
   :ensure t
   :pre-load
@@ -279,7 +289,6 @@ and so on."
      ("s s" . helm-projectile-ag)
      ("s g" . helm-projectile-grep)
      ("s a" . helm-projectile-ack))))
-
 
 ;; completion framework
 (use-package company
@@ -305,7 +314,8 @@ and so on."
 ;; use helm to select company completions
 (use-package helm-company
   :ensure t
-  :bind ("C-:" . helm-company))
+  :bind (("C-:" . helm-company)
+	 ("C-;" . helm-company)))
 
 ;; prettier and smarter mode line
 (use-package smart-mode-line
@@ -313,15 +323,11 @@ and so on."
   :config (progn
 	    (message "starting smart-mode-line")
 	    (add-to-list 'sml/replacer-regexp-list '("^~/git/" ":Git:") t)
-					;	    (sml/apply-theme 'synth)
+	    ;;   (sml/apply-theme 'synth)
 	    (sml/setup)
 	    (setq sml/use-projectile-p 'before-prefixes)))
 
-;; disable debugging when loading is done
-(setq debug-on-error nil)
-
-;(load-theme 'synth t)
-
+;; show changes in fringe
 (use-package git-gutter
   :ensure t
   :diminish "±"
@@ -336,7 +342,13 @@ and so on."
 (use-package undo-tree
   :ensure t
   :diminish "↶ "
-  :config (global-undo-tree-mode))
+  :bind ("C-x u" . undo-tree-visualize)
+  :config
+  (progn
+    (global-undo-tree-mode)
+    (bind-keys
+     :map undo-tree-visualizer-mode-map
+     ("C-g" . kill-buffer-and-window))))
 
 ;; show argument lists in echo area
 (use-package eldoc
@@ -444,7 +456,8 @@ and so on."
 	  cider-prompt-save-file-on-load nil
 	  cider-lein-command "lein"
 	  cider-lein-parameters "with-profile +power repl"
-	  nrepl-port "4555")
+	  nrepl-port "4555"
+	  cider-repl-wrap-history t)
 
     ;; jump to repl buffer on connect cider-repl-pop-to-buffer-on-connect t
     (add-to-list 'same-window-buffer-names "*cider*")
@@ -466,8 +479,6 @@ restart the server."
     (require 'company)
     (add-hook 'cider-repl-mode-hook 'company-mode)
     (add-hook 'cider-mode-hook 'company-mode)
-
-    (require 'paredit)
 
     (defun clear-message-buffer ()
       "Find the messages buffer and clear it.
@@ -502,23 +513,33 @@ If invoked with a PREFIX argument, print the result in the current buffer."
        "(do (require 'schema.core)
         (schema.core/set-fn-validation! true))"))
 
-    (define-key cider-repl-mode-map (kbd "M-RET") 'cider-doc)
-
-    (defun cider-clear-repl-buffer-2 ()
+    (defun cider-clear-repl ()
+      "clear the relevant REPL buffer"
       (interactive)
       (cider-switch-to-relevant-repl-buffer)
       (cider-repl-clear-buffer)
       (cider-switch-to-last-clojure-buffer))
 
+    (defun cider-eval-buffer-and-set-ns ()
+      (interactive)
+      (cider-eval-buffer)
+      (cider-repl-set-ns))
+
+    (bind-keys
+     :map clojure-mode-map
+     ("C->"     . cljr-cycle-coll)
+     ("C-c C-j" . cider-jack-in))
 
     (bind-keys
      :map cider-mode-map
+     ("M-RET"     . cider-doc)
      ("C-x M-e"   . cider-eval-last-sexp-and-replace)
      ("C-x M-r"   . cider-eval-last-sexp-to-repl)
-     ("M-RET"     . cider-doc)
      ("C-c t t"   . cider-test-run-tests)
      ("C-c C-j"   . cider-jack-in)
+     ("C-c r c"   . cider-rotate-connection)
      ("C-c p-p"   . nil)
+     ("C-c C-o"   . cider-clear-repl)
      ("C-c n e b" . cider-eval-buffer)
      ("C-c m b"   . cider-eval-buffer)
      ;;     ("M-?"       . ac-nrepl-popup-doc) ;; TODO  find alternative
@@ -526,20 +547,10 @@ If invoked with a PREFIX argument, print the result in the current buffer."
      ("<f19>"     . cider-eval-last-sexp) ;; as C-x C-e
      ("s-p s-p"   . cider-pp))
 
-    (define-key cider-repl-mode-map (kbd "C-c C-o") 'cider-repl-clear-buffer)
-    (define-key cider-repl-mode-map (kbd "M-?") 'ac-nrepl-popup-doc)
-    (define-key clojure-mode-map (kbd "C->") 'cljr-cycle-coll)
-
-    (define-key clojure-mode-map (kbd "C-c C-j") 'cider-jack-in)
-
-    (setq cider-repl-wrap-history t)
-
-    (define-key cider-mode-map (kbd "C-c C-o")
-      (lambda ()
-	(interactive)
-	(cider-switch-to-relevant-repl-buffer)
-	(cider-repl-clear-buffer)
-	(cider-switch-to-last-clojure-buffer)))
+    (bind-keys
+     :map cider-repl-mode-map
+     ("C-c C-o" . cider-repl-clear-buffer)
+     ("M-?"     . ac-nrepl-popup-doc))
 
     (define-key cider-mode-map (kbd "C-x C-q")
       (lambda ()
@@ -549,8 +560,6 @@ If invoked with a PREFIX argument, print the result in the current buffer."
 	(cider-switch-to-last-clojure-buffer)
 	(cider-eval-last-sexp)
 	(cider-pp)))
-
-
 
     (define-key clojure-mode-map (kbd "C-x s-p")
       (lambda ()
@@ -570,7 +579,6 @@ If invoked with a PREFIX argument, print the result in the current buffer."
       (cider-eval-defun-at-point))
 
     (define-key cider-mode-map (kbd "C-c n n") 'cider-eval-and-move-next)))
-
 
 (defun live-lisp-describe-thing-at-point ()
   "Show the documentation of the Elisp function and variable near point.
@@ -622,22 +630,6 @@ If invoked with a PREFIX argument, print the result in the current buffer."
    ("M-B" . ahs-backward)
    ("M-E" . ahs-edit-mode)))
 
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(custom-safe-themes
-   (quote
-    ("edf4b6400f473455e9af1b8f205ab2c1625a839ab5cabb1272cd4c78f0188710" "9f2d4c071cb97f7c40f6cbc917183adab0cb631f28c540c07da411514bbb3eb7" "b611e26d8b8db41b2859a002f4be1899969a65c0f498de0350eb3957b7471def" "6308a012ffc059bf91f7c1f36d51901d84a032d94f6fc70c2b6bd630ce136502" "6a37be365d1d95fad2f4d185e51928c789ef7a4ccf17e7ca13ad63a8bf5b922f" default)))
- '(display-buffer-base-action (quote (display-buffer-reuse-window (reusable-frames . t)))))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
-
 ;;
 (use-package yasnippet
   :ensure t
@@ -646,8 +638,6 @@ If invoked with a PREFIX argument, print the result in the current buffer."
   (progn
     (add-to-list 'yas-snippet-dirs
 		 (f-join user-emacs-directory "etc" "snippets"))))
-
-(use-package platform-osx)
 
 (use-package dockerfile-mode
   :ensure t)
@@ -702,28 +692,22 @@ If invoked with a PREFIX argument, print the result in the current buffer."
       (geiser-load-current-buffer))
 
     (require 'geiser)
-
     (push '("lambda"  . ?λ) prettify-symbols-alist)
-
-    ;; (bind-keys
-    ;;  :map 'geiser-mode-map
-    ;;  ("C-c m b" . geiser-save-and-load-buffer))
-
     ))
 
 
 (use-package racket-mode
   :ensure t
+  :init (add-to-list 'auto-mode-alist '("\\.rkt\\'" . racket-mode))
   :commands (racket-mode)
   :config
   (progn
     (add-hook 'racket-mode-hook
 	      (lambda ()
 		(paredit-mode +1)
-		(eldoc-mode +1)
+;		(eldoc-mode -1)
 		(prettify-symbols-mode +1)
 		(push '("lambda"  . ?λ) prettify-symbols-alist)))
-    (add-to-list 'auto-mode-alist '("\\.rkt\\'" . racket-mode))
     (bind-keys
      :map racket-mode-map
      ("C-c m b" . racket-run))))
@@ -741,9 +725,41 @@ If invoked with a PREFIX argument, print the result in the current buffer."
   :bind (("C-x m" . magit-status)))
 
 
-(defun gitx ()
-  (interactive)
-  (shell-command "gitx ."))
-
 (use-package markdown-mode
+  :ensure t
+  :init (progn
+	  (add-to-list 'auto-mode-alist '("\\.md\\'" . markdown-mode))
+	  (add-to-list 'auto-mode-alist '("\\.markdown\\'" . markdown-mode)))
+  :commands (markdown-mode))
+
+(use-package js2-mode
   :ensure t)
+
+(use-package skewer-mode
+  :ensure t)
+
+(setq tramp-default-method "ssh")
+
+
+; Problem with TRAMP mode
+; Control Path too long error
+; TMPDIR variable is really large
+; http://lists.macosforge.org/pipermail/macports-tickets/2011-June/084295.html
+(setenv "TMPDIR" "/tmp")
+
+(getenv "TMPDIR")
+
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(custom-safe-themes
+   (quote
+    ("6a37be365d1d95fad2f4d185e51928c789ef7a4ccf17e7ca13ad63a8bf5b922f" default))))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
