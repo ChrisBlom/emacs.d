@@ -50,6 +50,9 @@
 
 (global-set-key (kbd "C-x M-k") 'delete-current-buffer-file)
 
+(defun gitx ()
+  (interactive)
+  (shell-command "gitx ."))
 
 ;; Push mark when using ido-imenu
 (defvar push-mark-before-goto-char nil)
