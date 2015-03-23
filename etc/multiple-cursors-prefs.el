@@ -4,20 +4,31 @@
 (setq mc/cmds-to-run-for-all
       '(
 	backward-delete-char
+	beginning-of-buffer
 	browse-kill-ring
 	cider-eval-defun-at-point
+	cider-eval-last-sexp
+	cider-eval-last-sexp-and-replace
 	cljr-cycle-coll
+	cljr-thread
 	cua-copy-region
 	cua-paste
+	electric-newline-and-maybe-indent
+	end-of-buffer
 	eval-defun
 	eval-last-sexp
 	hs-toggle-hiding
 	indent-for-tab-command
+	kill-region
+	live-delete-whitespace-except-one
 	live-paredit-forward-kill-sexp
+	move-line-up
 	org-delete-char
 	org-self-insert-command
+	org-todo
 	paredit-backslash
 	paredit-backward-kill-word
+	paredit-backward-slurp-sexp
 	paredit-close-round
 	paredit-comment-dwim
 	paredit-doublequote
@@ -34,18 +45,21 @@
 	paredit-semicolon
 	paredit-splice-sexp-killing-backward
 	paredit-splice-sexp-killing-forward
+	paredit-split-sexp
+	repeat
 	transpose-sexps
 	yas-expand
 	))
 
 (setq mc/cmds-to-run-once
       '(
-	kill-region
-	live-delete-whitespace-except-one
+	delete-indentation
+	js2-down-mouse-3
+	js2-mode-show-node
 	markdown-exdent-or-delete
 	mc/mark-next-like-this-repeat
 	mc/mark-previous-like-this-repeat
+	mouse-buffer-menu
 	mouse-drag-secondary
-	repeat
 	smex
 	))

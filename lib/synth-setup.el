@@ -1,5 +1,7 @@
 (provide 'synth-setup)
 
+;;;; Basic settings
+
 ;; disable gui stuff, it will only slow us down....
 (tool-bar-mode -1)
 (scroll-bar-mode -1)
@@ -42,25 +44,26 @@
 
 ;; emacs doesn't work well with fish as its shell
 (setq shell-file-name "/bin/bash")
+
+;; shells start in user home by default
 (setq command-line-default-directory "~/")
 
 ;; add extra package repositories
-(setq package-archives '(("gnu" . "http://elpa.gnu.org/packages/")
-                         ("marmalade" . "https://marmalade-repo.org/packages/")
-                         ("melpa" . "http://melpa.milkbox.net/packages/")))
-
-(setq package-enable-at-startup t)
+(setq package-archives '(("gnu"          . "http://elpa.gnu.org/packages/")
+                         ("marmalade"    . "https://marmalade-repo.org/packages/")
+                         ("melpa"        . "http://melpa.org/packages/")
+			 ("melpa-stable" . "http://stable.melpa.org/packages/")))
 
 ;; osx specific
 (setq mac-option-modifier 'meta)
 (setq mac-command-modifier 'super)
 (setq mac-function-modifier 'command)
 
-
 (setq ring-bell-function 'ignore)
 
 (setq max-lisp-eval-depth 10000)
 (set-variable 'max-specpdl-size 5000)
+
 ;; initiate GC every 20 mb allocated
 (setq gc-cons-threshold 20000000)
 
@@ -70,3 +73,9 @@
 (put 'erase-buffer 'disabled nil)
 (put 'set-goal-column 'disabled nil)
 (put 'narrow-to-region 'disabled nil)
+
+;; prefer horizontal split splits:
+(setq split-height-threshold 80)
+(setq split-width-threshold 120)
+
+(setq initial-scratch-message ";; Loaded emacs")

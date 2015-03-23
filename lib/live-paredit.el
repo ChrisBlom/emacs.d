@@ -2,6 +2,8 @@
   ;; need a binding that works in the terminal
   '(define-key paredit-mode-map (kbd "M-)") 'paredit-forward-slurp-sexp))
 
+;; TODO add dfs and bfs traversals
+
 (require 'paredit)
 (require 'thingatpt)
 
@@ -31,29 +33,6 @@
         (forward-sexp)
         (backward-sexp))
     (paredit-forward)))
-
-(defun live-paredit-forward-slurp-sexp-neatly ()
-  (interactive)
-  (save-excursion
-    (cond ((or (paredit-in-comment-p)
-               (paredit-in-char-p))
-           (error "Invalid context for slurping S-expressions."))
-          ((paredit-in-string-p)
-           (paredit-forward-slurp-into-string))
-          (t
-
-           (save-excursion
-             (paredit-forward-up)
-             (paredit-backward-down)
-             (paredit-forward-slurp-sexp)
-             (just-one-space)))))
-  (when (not (save-excursion
-               (ignore-errors
-                 (backward-sexp)
-                 t)))
-    (delete-horizontal-space)))
-
-
 
 (defun live-paredit-forward-kill-sexp (&optional arg)
   (interactive "p")
@@ -117,6 +96,8 @@
                       (indent-sexp))
                     (live-paredit-tidy-trailing-parens))))))
 
+(defun live-end-of-buffer-p ()
+  (= (point) (point-max)))
 
 (defun live-paredit-forward-down ()
   "Doesn't freeze Emacs if attempted to be called at end of
@@ -140,5 +121,14 @@
 (defun live-paredit-copy-sexp-at-point ()
   (interactive)
     (kill-new (thing-at-point 'sexp)))
+
+;; Inverse M-(
+(defun paredit-wrap-round-from-behind ()
+  (interactive)
+  (forward-sexp -1)
+  (paredit-wrap-round)
+  (insert " ")
+  (forward-char -1))
+
 
 (provide 'live-paredit)

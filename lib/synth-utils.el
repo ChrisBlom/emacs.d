@@ -10,15 +10,15 @@
     (error (message "Invalid expression")
            (insert (current-kill 0)))))
 
-(defmacro rename-modeline (package-name mode new-name)
-  `(eval-after-load ,package-name
-     '(defadvice ,mode (after rename-modeline activate)
-        (setq mode-name ,new-name))))
+;; (defmacro rename-modeline (package-name mode new-name)
+;;   `(eval-after-load ,package-name
+;;      '(defadvice ,mode (after rename-modeline activate)
+;;         (setq mode-name ,new-name))))
 
-(rename-modeline "js2-mode" js2-mode "JS2")
-(rename-modeline "clojure-mode" clojure-mode "Clj")
-(rename-modeline "Emacs-Lisp" emacs-lisp-mode "EL")
-(rename-modeline "REPL" cider-repl-mode "repl")
+;; (rename-modeline "js2-mode" js2-mode "JS2")
+;; (rename-modeline "clojure-mode" clojure-mode "Clj")
+;; (rename-modeline "Emacs-Lisp" emacs-lisp-mode "EL")
+;; (rename-modeline "REPL" cider-repl-mode "repl")
 
 (defun rename-file-and-buffer ()
   "Rename the current buffer and file it is visiting."
@@ -69,10 +69,6 @@
 ;; set mark before jumping to imenu entry
 (defadvice ido-imenu (before push-mark activate) (push-mark))
 
-;; override insert file with idomenu,
-(global-set-key (kbd "C-x C-i") 'idomenu)
-(global-set-key (kbd "C-x i") 'idomenu)
-
 ;; show line numbers during goto-line
 (defun goto-line-with-feedback ()
   "Show line numbers temporarily, while prompting for the line number input"
@@ -80,10 +76,9 @@
   (unwind-protect
       (progn
         (linum-mode 1)
-        (goto-line (read-number "Goto line: ")))
+        (goto-line (read-number "Goto line: "))
+	(pulse-momentary-highlight-one-line (point)))
     (linum-mode -1)))
-
-(global-set-key [remap goto-line] 'goto-line-with-feedback)
 
 ;; todo : support regions and sexps
 (defun move-line-down ()
@@ -115,14 +110,6 @@
   `(lambda ()
     (interactive)
     (ignore-errors (,f ,n))))
-
-;; Move more quickly
-(global-set-key (kbd "s-n") (try-times next-line 5))
-(global-set-key (kbd "s-p") (try-times previous-line 5))
-(global-set-key (kbd "s-f") (try-times forward-char 5))
-(global-set-key (kbd "s-b") (try-times backward-char 5))
-
-
 
 (defadvice undo-tree-undo (around keep-region activate)
   (if (use-region-p)
@@ -160,5 +147,32 @@
           (select-window first-win)
           (if this-win-2nd (other-window 1))))))
 
-
 (defalias 'tws 'toggle-window-split)
+
+(defun live-windows-hide-eol ()
+      "Do not show ^M in files containing mixed UNIX and DOS line endings."
+      (interactive)
+      (setq buffer-display-table (make-display-table))
+      (aset buffer-display-table ?\^M []))
+
+(defun live-lisp-describe-thing-at-point ()
+  "Show the documentation of the Elisp function and variable near point.
+   This checks in turn:
+     -- for a function name where point is
+     -- for a variable name where point is
+     -- for a surrounding function call"
+  (interactive)
+  (let (sym)
+    ;; sigh, function-at-point is too clever.  we want only the first half.
+    (cond ((setq sym (ignore-errors
+		       (with-syntax-table emacs-lisp-mode-syntax-table
+			 (save-excursion
+			   (or (not (zerop (skip-syntax-backward "_w")))
+			       (eq (char-syntax (char-after (point))) ?w)
+			       (eq (char-syntax (char-after (point))) ?_)
+			       (forward-sexp -1))
+			   (skip-chars-forward "`'")
+			   (let ((obj (read (current-buffer))))
+			     (and (symbolp obj) (fboundp obj) obj))))))
+	   (describe-function sym))
+	  ((setq sym (variable-at-point)) (describe-variable sym)))))

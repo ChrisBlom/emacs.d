@@ -1,24 +1,26 @@
+(defconst init-start (current-time))
+
 ;; put libs that cannot be loaded as packages on the load path
 (add-to-list 'load-path (concat user-emacs-directory "lib"))
 
 ;; load basic setup
 (require 'synth-setup)
 
+(package-initialize)
 ;; make sure we can use packages
-(package-initialize)
-(package-install 'use-package)
-(package-initialize)
+(or (package-installed-p 'use-package)
+    (package-install 'use-package))
 
 ;; organized package loading framework
 (require 'use-package)
 
+;; osx specific stuff
 (use-package platform-osx)
 
 ;; modern list library
 (use-package dash
   :ensure t
-  :config
-  (dash-enable-font-lock))
+  :config (dash-enable-font-lock))
 
 ;; modern string library
 (use-package s :ensure t)
@@ -51,9 +53,16 @@
 ;; it makes my eyes bleed, i prefer dark themes
 (add-to-list 'custom-theme-load-path (f-join user-emacs-directory "themes"))
 (load-theme 'synth t)
+;; highlight current line
+(global-hl-line-mode)
+
+(defun pulse-current-line ()
+  (interactive)
+  (pulse-momentary-highlight-one-line (point)))
 
 ;; undo/redo window configurations
 (use-package winner
+  :demand t
   :config (winner-mode +1)
   :bind (("C-c b" . winner-undo)
 	 ("C-c f" . winner-redo)))
@@ -75,23 +84,22 @@
   :config
   (progn
     (use-package idomenu :ensure t)
+    ;; use fuzze matching for ido
     (use-package flx-ido :ensure t)
     (use-package ido-vertical-mode :ensure t)
     (use-package ido-ubiquitous :ensure t)
-
+    (add-to-list 'ido-ignore-files "\\.DS_Store")
     (ido-mode t)
     (ido-vertical-mode +1)
     (ido-ubiquitous-mode +1)
     (flx-ido-mode +1)
     (icomplete-mode +1)
-
     (setq ido-enable-flex-matching t
 	  ;; disable ido faces to see flx highlights.
 	  ido-use-faces nil
 	  ido-enable-prefix nil
 	  ido-create-new-buffer 'always
-	  ido-max-prospects 10
-
+	  ido-max-prospects 5
 	  ido-default-file-method 'selected-window
 	  ido-everywhere 1)))
 
@@ -113,7 +121,7 @@
   :config
   (progn
     (key-chord-mode +1)
-    (setq key-chord-two-keys-delay 0.05)))
+    (setq key-chord-two-keys-delay 0.07)))
 
 ;; From http://groups.google.com/group/gnu.emacs.help/browse_thread/thread/44728fda08f1ec8f?hl=en&tvc=2
 (defun make-repeatable-command (cmd)
@@ -158,27 +166,20 @@ and so on."
   (progn
     (global-set-key (kbd "M-]") 'er/expand-region)
     (global-set-key (kbd "M-[") 'er/contract-region)
-
     (bind-keys
      :map global-map
      ("M-("       . er/contract-region)
-     ("M-)"       . er/expand-region))
-    ))
-
-
-
+     ("M-)"       . er/expand-region))))
 
 (use-package multiple-cursors
   :ensure t
   :pre-load (setq mc/list-file (f-join user-emacs-directory "etc" "multiple-cursors-prefs.el"))
   :config
   (progn
-
     (bind-keys
      ("C-c m h" . mc-hide-unmatched-lines-mode)
      ("C-c m a" . mc/mark-all-like-this-dwim)
      ("C-c m d" . mc/mark-all-symbols-like-this-in-defun))
-
     (global-set-key (kbd "s-]") 'mc/mark-next-like-this)
     (global-set-key (kbd "s-[") 'mc/mark-previous-like-this)
     (global-set-key (kbd "s-{") 'mc/unmark-previous-like-this)
@@ -196,7 +197,8 @@ and so on."
   (progn
     ;; TODO extract useful stuff
     (load-file (f-join user-emacs-directory "lib/live-paredit.el"))
-
+    (add-hook 'paredit-mode-hook
+	      (lambda () (hs-minor-mode 1)))
     ;; Inverse M-(
     (defun paredit-wrap-round-from-behind ()
       (interactive)
@@ -204,22 +206,15 @@ and so on."
       (paredit-wrap-round)
       (insert " ")
       (forward-char -1))
-
     (key-chord-define paredit-mode-map "()" #'paredit-backward-up)
     (bind-keys
      :map paredit-mode-map
      ("M-<left>"  . backward-word)
      ("M-<right>" . forward-word)
-
-     ("C-("       . paredit-forward-slurp-sexp)
-     ("C-)"       . paredit-backward-slurp-sexp)
-
-     ("s-)"       . paredit-backward-barf-sexp)
-     ("s-("       . paredit-forward-barf-sexp)
-
-     ("M-("       . paredit-wrap-round)
-     ("M-)"       . paredit-wrap-round-from-behind)
-
+     ("s-<left>"  . backward-sexp)
+     ("s-<right>" . live-paredit-forward-down)
+     ("C-)"       . paredit-forward-slurp-sexp)
+     ("C-("       . paredit-backward-slurp-sexp)
      ("C-c l l"   . align-cljlet)
      ("C-c l k"   . paredit-splice-sexp-killing-forward)
      ("C-c l w"   . paredit-splice-sexp-killing-backward)
@@ -227,14 +222,12 @@ and so on."
      ("C-c l j"   . live-paredit-forward-slurp-sexp-neatly)
      ("C-M-j"     . live-paredit-forward-slurp-sexp-neatly)
      ("C-M-z"     . align-cljlet)
-
      ("M-S"       . paredit-split-sexp)
      ("M-s"       . paredit-splice-sexp)
      ("M-j"       . paredit-join-sexps)
-
+     ("M-T"       . transpose-sexps)
      ("M-P"       . live-paredit-previous-top-level-form)
      ("M-N"       . live-paredit-next-top-level-form)
-
      ("C-M-f"     . live-paredit-forward)
      ("M-q"       . live-paredit-reindent-defun)
      ("M-d"       . live-paredit-forward-kill-sexp)
@@ -243,9 +236,7 @@ and so on."
      ("C-M-i"     . paredit-forward-down)
      ("C-M-n"     . paredit-forward-up)
      ("C-M-p"     . paredit-backward-down)
-     ("C-M-u"     . paredit-backward-up)
-     ("M-T"       . transpose-sexps)
-     ("C-M-k"     . live-paredit-copy-sexp-at-point))))
+     ("C-M-u"     . paredit-backward-up))))
 
 ;; better grep, requires ag to be installed
 (use-package ag :ensure t)
@@ -268,7 +259,8 @@ and so on."
     (require 'helm-source)
     (require 'helm-config)
     (require 'helm-adaptive)
-    (setq helm-adaptive-history-file (f-tmp-file "helm" "adaptive-history"))))
+    (setq helm-adaptive-history-file (f-tmp-file "helm" "adaptive-history"))
+    (setq helm-split-window-default-side 'right)))
 
 ;; project oriented commands
 (use-package projectile
@@ -283,7 +275,8 @@ and so on."
     (setq projectile-mode-line-lighter "P")
     (setq projectile-mode-line "P") ;; smart modeline already shows the current projectile project
     (setq projectile-completion-system 'ido)
-
+    (key-chord-define projectile-mode-map "jk" #'projectile-switch-project)
+    (key-chord-define projectile-mode-map "df" #'projectile-find-file-dwim)
     (bind-keys
      :map projectile-command-map
      ("s s" . helm-projectile-ag)
@@ -296,20 +289,29 @@ and so on."
   :diminish "c "
   :config
   (progn
-    (define-key company-mode-map (kbd "C-:") 'helm-company)
+    (bind-keys
+     :map company-mode-map
+     ("C-:" . helm-company))
+    (bind-keys
+     :map company-active-map
+     ("C-n" . company-select-next-or-abort)
+     ("C-p" . company-select-previous-or-abort))
     (define-key company-active-map (kbd "C-:") 'helm-company)
-    (global-company-mode)
     (setq company-minimum-prefix-length 1
 	  company-idle-delay 0.01
 	  company-selection-wrap-around t
 	  company-async-timeout 0.5
+	  company-auto-complete-chars '(?\ ?\) ?\. )
 	  ;; select using super+number
 	  company-show-numbers t
+	  company-tooltip-align-annotations t
 	  ;; dont downcase completions
 	  company-dabbrev-downcase nil
 	  company-transformers '(company-sort-by-occurrence company-sort-by-backend-importance))
+
     (dotimes (i 10)
-      (define-key company-mode-map (read-kbd-macro (format "s-%d" i)) 'company-complete-number))))
+      (define-key company-mode-map (read-kbd-macro (format "s-%d" i)) 'company-complete-number))
+    (global-company-mode +1)))
 
 ;; use helm to select company completions
 (use-package helm-company
@@ -371,13 +373,6 @@ and so on."
   (add-hook 'emacs-lisp-mode-hook
 	    (lambda () (elisp-slime-nav-mode t))))
 
-(add-hook 'emacs-lisp-mode-hook
-	  (lambda ()
-	    (prettify-symbols-mode +1)
-	    (paredit-mode +1)
-	    (yas-minor-mode +1)
-	    (elisp-slime-nav-mode +1)))
-
 (use-package clojure-mode
   :ensure t
   :commands clojure-mode
@@ -385,7 +380,6 @@ and so on."
   (progn
     (use-package clojure-mode-extra-font-locking :ensure t)
     (use-package align-cljlet :ensure t)
-
     (defun synth-toggle-clojure-ignore-next-form ()
       "toggle #_"
       (interactive)
@@ -394,12 +388,16 @@ and so on."
 	(if (char-equal ?_  (preceding-char))
 	    (delete-backward-char 2)
 	  (insert-string "#_"))))
-
-    (define-key clojure-mode-map (kbd "C-c C-j") 'cider-jack-in)
-    (define-key clojure-mode-map
-      (kbd "C-c C-3")
-      'synth-toggle-clojure-ignore-next-form)
-
+    (defun no-cider ()
+      (interactive)
+      (message "Cider is not connected"))
+    (bind-keys
+     :map clojure-mode-map
+     ("C-c C-j" . cider-jack-in)
+     ("C-c M-c" . cider-connect)
+     ("C-x C-e" . no-cider)
+     ("C-c C-p" . no-cider)
+     ("C-c C-3" . synth-toggle-clojure-ignore-next-form))
     (add-hook 'clojure-mode-hook
 	      (lambda ()
 		(eldoc-mode +1)
@@ -409,198 +407,10 @@ and so on."
 		(setq buffer-save-without-query t)
 		(prettify-symbols-mode +1)
 		(auto-highlight-symbol-mode +1)
+		(push '("#{" . "∈{") prettify-symbols-alist)
 		(push '(">=" . ?≥) prettify-symbols-alist)
 		(push '("comp" . ?○) prettify-symbols-alist)))))
 
-(use-package cider
-  :ensure t
-  :commands (cider-jack-in cider-mode)
-  :config
-  (progn
-    (require 'clojure-mode)
-    (require 'cider)
-    (require 'cider-interaction)
-    (require 'cider-inspector)
-    (require 'cider-test)
-    (require 'cider-grimoire)
-    (use-package clj-refactor :ensure t)
-
-    (when (eq system-type 'windows-nt)
-      (add-hook 'nrepl-mode-hook 'live-windows-hide-eol ))
-
-    (add-hook 'cider-repl-mode-hook
-	      (lambda ()
-		(cider-turn-on-eldoc-mode)
-		(paredit-mode 1)))
-
-    (add-hook 'cider-mode-hook
-	      (lambda ()
-		(cider-turn-on-eldoc-mode)
-		(paredit-mode 1)
-		(hs-minor-mode 1)))
-
-    (defun live-windows-hide-eol ()
-      "Do not show ^M in files containing mixed UNIX and DOS line endings."
-      (interactive)
-      (setq buffer-display-table (make-display-table))
-      (aset buffer-display-table ?\^M []))
-
-    (setq cider-popup-stacktraces t
-	  cider-popup-stacktraces-in-repl t
-	  cider-show-error-buffer t
-	  cider-auto-select-error-buffer nil
-	  cider-auto-jump-to-error nil
-	  cider-test-show-report-on-success nil
-	  cider-repl-use-clojure-font-lock nil
-	  nrepl-log-messages nil
-	  cider-prompt-save-file-on-load nil
-	  cider-lein-command "lein"
-	  cider-lein-parameters "with-profile +power repl"
-	  nrepl-port "4555"
-	  cider-repl-wrap-history t)
-
-    ;; jump to repl buffer on connect cider-repl-pop-to-buffer-on-connect t
-    (add-to-list 'same-window-buffer-names "*cider*")
-
-    (defun cider-clean-restart (&optional prompt-project)
-      "Quit CIDER, run `lein clean` and restart CIDER.
-If PROMPT-PROJECT is t, then prompt for the project in which to
-restart the server."
-      (interactive "P")
-      (cider-quit)
-      (message "Waiting for CIDER to quit...")
-      (sleep-for 2)
-      (message "Running lein clean...")
-      (let ((exit (shell-command "lein clean")))
-	(if (zerop exit) (cider-jack-in prompt-project)
-	  (message "Could not run lein clean"))))
-
-    ;; Enable company-mode
-    (require 'company)
-    (add-hook 'cider-repl-mode-hook 'company-mode)
-    (add-hook 'cider-mode-hook 'company-mode)
-
-    (defun clear-message-buffer ()
-      "Find the messages buffer and clear it.
-       Returns to the buffer in which the command was invoked."
-      (interactive)
-      (let ((origin-buffer (current-buffer)))
-	(switch-to-buffer "*Messages*")
-	(read-only-mode -1)
-	(erase-buffer)
-	(read-only-mode +1)
-	(switch-to-buffer origin-buffer)))
-
-    (defun cider-clear-and-eval-defun-at-point ()
-      (interactive)
-      (cider-find-and-clear-repl-buffer)
-      (clear-message-buffer)
-      (cider-eval-defun-at-point))
-
-
-    (defun cider-pp (&optional prefix)
-      "Evaluate the expression preceding point.
-If invoked with a PREFIX argument, print the result in the current buffer."
-      (interactive "P")
-      (cider-interactive-eval
-       (format "(let [res %s] (clojure.pprint/pprint res) res)" (cider-last-sexp))
-					;       (cider-last-sexp-start-pos)
-       ))
-
-    (defun cider-set-validate ()
-      (interactive)
-      (cider-interactive-eval
-       "(do (require 'schema.core)
-        (schema.core/set-fn-validation! true))"))
-
-    (defun cider-clear-repl ()
-      "clear the relevant REPL buffer"
-      (interactive)
-      (cider-switch-to-relevant-repl-buffer)
-      (cider-repl-clear-buffer)
-      (cider-switch-to-last-clojure-buffer))
-
-    (defun cider-eval-buffer-and-set-ns ()
-      (interactive)
-      (cider-eval-buffer)
-      (cider-repl-set-ns))
-
-    (bind-keys
-     :map clojure-mode-map
-     ("C->"     . cljr-cycle-coll)
-     ("C-c C-j" . cider-jack-in))
-
-    (bind-keys
-     :map cider-mode-map
-     ("M-RET"     . cider-doc)
-     ("C-x M-e"   . cider-eval-last-sexp-and-replace)
-     ("C-x M-r"   . cider-eval-last-sexp-to-repl)
-     ("C-c t t"   . cider-test-run-tests)
-     ("C-c C-j"   . cider-jack-in)
-     ("C-c r c"   . cider-rotate-connection)
-     ("C-c p-p"   . nil)
-     ("C-c C-o"   . cider-clear-repl)
-     ("C-c n e b" . cider-eval-buffer)
-     ("C-c m b"   . cider-eval-buffer)
-     ;;     ("M-?"       . ac-nrepl-popup-doc) ;; TODO  find alternative
-     ("C-`"       . cider-clear-and-eval-defun-at-point)
-     ("<f19>"     . cider-eval-last-sexp) ;; as C-x C-e
-     ("s-p s-p"   . cider-pp))
-
-    (bind-keys
-     :map cider-repl-mode-map
-     ("C-c C-o" . cider-repl-clear-buffer)
-     ("M-?"     . ac-nrepl-popup-doc))
-
-    (define-key cider-mode-map (kbd "C-x C-q")
-      (lambda ()
-	(interactive)
-	(cider-switch-to-relevant-repl-buffer)
-	(cider-repl-clear-buffer)
-	(cider-switch-to-last-clojure-buffer)
-	(cider-eval-last-sexp)
-	(cider-pp)))
-
-    (define-key clojure-mode-map (kbd "C-x s-p")
-      (lambda ()
-	(interactive)
-	(cider-eval-last-sexp)
-	(cider-repl-clear-buffer)
-	(cider-pp)))
-
-    (defun cider-eval-and-move-next ()
-      (interactive)
-      (outline-next-visible-heading 1)
-      (cider-eval-defun-at-point))
-
-    (defun cider-eval-and-move-previous ()
-      (interactive)
-      (outline-previous-visible-heading 2)
-      (cider-eval-defun-at-point))
-
-    (define-key cider-mode-map (kbd "C-c n n") 'cider-eval-and-move-next)))
-
-(defun live-lisp-describe-thing-at-point ()
-  "Show the documentation of the Elisp function and variable near point.
-   This checks in turn:
-     -- for a function name where point is
-     -- for a variable name where point is
-     -- for a surrounding function call"
-  (interactive)
-  (let (sym)
-    ;; sigh, function-at-point is too clever.  we want only the first half.
-    (cond ((setq sym (ignore-errors
-		       (with-syntax-table emacs-lisp-mode-syntax-table
-			 (save-excursion
-			   (or (not (zerop (skip-syntax-backward "_w")))
-			       (eq (char-syntax (char-after (point))) ?w)
-			       (eq (char-syntax (char-after (point))) ?_)
-			       (forward-sexp -1))
-			   (skip-chars-forward "`'")
-			   (let ((obj (read (current-buffer))))
-			     (and (symbolp obj) (fboundp obj) obj))))))
-	   (describe-function sym))
-	  ((setq sym (variable-at-point)) (describe-variable sym)))))
 
 ;; Show documentation/information with M-RET
 (define-key lisp-mode-shared-map (kbd "M-RET") 'live-lisp-describe-thing-at-point)
@@ -624,11 +434,19 @@ If invoked with a PREFIX argument, print the result in the current buffer."
     (add-hook 'emacs-lisp-mode-hook 'auto-highlight-symbol-mode)
     (add-hook 'clojure-mode 'auto-highlight-symbol-mode))
   :config
-  (bind-keys
-   :map auto-highlight-symbol-mode-map
-   ("M-F" . ahs-forward)
-   ("M-B" . ahs-backward)
-   ("M-E" . ahs-edit-mode)))
+  (progn
+    (setq ahs-default-range 'ahs-range-whole-buffer)
+    (setq ahs-select-invisible 'temporary)
+    (bind-keys
+     :map auto-highlight-symbol-mode-map
+     ("M-F" . ahs-forward)
+     ("M-B" . ahs-backward)
+     ("s-e" . ahs-edit-mode)
+     ("s-f" . ahs-forward)
+     ("s-F" . ahs-forward-definition)
+     ("s-b" . ahs-backward)
+     ("s-B" . ahs-backward-definition)
+     ("M-E" . ahs-edit-mode))))
 
 ;;
 (use-package yasnippet
@@ -644,7 +462,7 @@ If invoked with a PREFIX argument, print the result in the current buffer."
 
 (use-package restclient
   :ensure t
-  :commands restclient-mode)
+  :commands (restclient-mode))
 
 ;; load personal stuff
 (use-package synth-utils)
@@ -666,19 +484,20 @@ If invoked with a PREFIX argument, print the result in the current buffer."
 
 (use-package tramp
   :config
-  (setq tramp-auto-save-directory (f-tmp-file "tramp" "autosaves/" ))
-  )
+  (progn
+    ;; Problem with TRAMP mode
+    ;; Control Path too long error
+    ;; TMPDIR variable is really large
+    ;; http://lists.macosforge.org/pipermail/macports-tickets/2011-June/084295.html
+    (setq tramp-default-method "sshx")
+    (setenv "TMPDIR" "/tmp")
+    (getenv "TMPDIR")
 
-;; (mapcar
-;;  (lambda (x)
-;;    `( ,(format "M-%s" x) .  ,(intern (format "window-number-select-%s" x) )))
-;;  (number-sequence 0 9))
-(setq initial-scratch-message ";; Loaded emacs")
+    (setq tramp-auto-save-directory (f-tmp-file "tramp" "autosaves/" ))))
 
 ;; start the server so clients can connect to it
 (require 'server)
 (if (not (server-running-p)) (server-start))
-
 
 (use-package geiser
   :ensure t
@@ -692,8 +511,7 @@ If invoked with a PREFIX argument, print the result in the current buffer."
       (geiser-load-current-buffer))
 
     (require 'geiser)
-    (push '("lambda"  . ?λ) prettify-symbols-alist)
-    ))
+    (push '("lambda"  . ?λ) prettify-symbols-alist)))
 
 
 (use-package racket-mode
@@ -710,7 +528,7 @@ If invoked with a PREFIX argument, print the result in the current buffer."
 		(push '("lambda"  . ?λ) prettify-symbols-alist)))
     (bind-keys
      :map racket-mode-map
-     ("C-c m b" . racket-run))))
+     ("C-c C-k" . racket-run))))
 
 (use-package hideshow
   :config
@@ -719,10 +537,21 @@ If invoked with a PREFIX argument, print the result in the current buffer."
     (use-package hideshowvis)
     (hideshowvis-enable)))
 
+(use-package highlight-sexp
+  :init
+  (progn (add-hook 'paredit-mode-hook 'highlight-sexp-mode)
+	 (setq hl-sexp-background-color   "#2b2b2b"))
+  :commands highlight-sexp-mode
+  :config
+  (highlight-sexp-mode))
+
 (use-package magit
   :ensure t
   :commands magit-status
-  :bind (("C-x m" . magit-status)))
+  :bind (("C-x m" . magit-status))
+  :config
+  (progn
+    (setq magit-save-some-buffers nil)))
 
 
 (use-package markdown-mode
@@ -733,21 +562,28 @@ If invoked with a PREFIX argument, print the result in the current buffer."
   :commands (markdown-mode))
 
 (use-package js2-mode
-  :ensure t)
+  :ensure t
+  :init (add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode))
+  :commands js2-mode)
 
 (use-package skewer-mode
-  :ensure t)
+  :ensure t
+  :commands (skewer-mode))
 
-(setq tramp-default-method "ssh")
 
 
-; Problem with TRAMP mode
-; Control Path too long error
-; TMPDIR variable is really large
-; http://lists.macosforge.org/pipermail/macports-tickets/2011-June/084295.html
-(setenv "TMPDIR" "/tmp")
+(use-package flycheck
+  :ensure t
+  :commands (flycheck-mode))
 
-(getenv "TMPDIR")
+(use-package evil
+  :ensure t
+  :commands (evil-mode))
+
+(setq eval-pulse-depth 1)
+(setq debug-on-error nil)
+
+(color-theme-synth)
 
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
@@ -756,10 +592,145 @@ If invoked with a PREFIX argument, print the result in the current buffer."
  ;; If there is more than one, they won't work right.
  '(custom-safe-themes
    (quote
-    ("6a37be365d1d95fad2f4d185e51928c789ef7a4ccf17e7ca13ad63a8bf5b922f" default))))
+    ("50598275d5ba41f59b9591203fdbf84c20deed67d5aa64ef93dd761c453f0e98" "91aecf8e42f1174c029f585d3a42420392479f824e325bf62184aa3b783e3564" "6a37be365d1d95fad2f4d185e51928c789ef7a4ccf17e7ca13ad63a8bf5b922f" default)))
+ '(global-hl-line-mode t))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  )
+
+(use-package cider
+  :ensure t
+  :pin melpa-stable
+  :commands (cider-jack-in cider-mode)
+  :config
+  (progn
+    (require 'clojure-mode)
+    (bind-keys
+     :map cider-mode-map
+     ("M-RET"     . cider-doc)
+     ("C-x M-e"   . cider-eval-last-sexp-and-replace)
+     ("C-x M-r"   . cider-eval-last-sexp-to-repl)
+     ("C-c t t"   . cider-test-run-tests)
+     ("C-c C-j"   . cider-jack-in)
+     ("C-c C-q"   . cider-quit)
+     ("C-c r c"   . cider-rotate-connection)
+     ("C-c p-p"   . nil) ;; conflict with projectile
+     ("C-c C-o"   . cider-clear-repl))
+    (when (eq system-type 'windows-nt)
+      (add-hook 'nrepl-mode-hook 'live-windows-hide-eol ))
+    (add-hook 'cider-repl-mode-hook
+	      (lambda ()
+		(cider-turn-on-eldoc-mode)
+		(paredit-mode 1)))
+    (add-hook 'cider-mode-hook
+	      (lambda ()
+		(cider-turn-on-eldoc-mode)
+		(paredit-mode 1)))
+
+    (setq cider-prefer-local-resources t
+	  cider-popup-stacktraces nil
+	  cider-popup-stacktraces-in-repl nil
+	  cider-show-error-buffer t
+	  cider-auto-select-error-buffer nil
+	  cider-auto-jump-to-error nil
+	  cider-annotate-completion-candidates t
+ 	  cider-test-show-report-on-success nil
+	  cider-repl-use-clojure-font-lock nil
+	  cider-prompt-save-file-on-load nil
+	  cider-lein-command "lein"
+	  cider-lein-parameters "with-profile +power repl"
+	  cider-repl-wrap-history t
+	  nrepl-buffer-name-show-port t
+	  nrepl-log-messages nil
+	  nrepl-port "4555")
+
+    (defun connect-riemann-staging ()
+      (interactive)
+      (cider-connect "staging-riemann.vpn.adgoji.com" 5557))
+    (defun riemann-reload ()
+      (interactive)
+      (cider-interactive-eval "(riemann.bin/reload!)"))
+    ;; jump to repl buffer on connect cider-repl-pop-to-buffer-on-connect t
+    (add-to-list 'same-window-buffer-names "*cider*")
+    (defun cider-clean-restart (&optional prompt-project)
+      "Quit CIDER, run `lein clean` and restart CIDER.
+If PROMPT-PROJECT is t, then prompt for the project in which to
+restart the server."
+      (interactive "P")
+      (cider-quit)
+      (message "Waiting for CIDER to quit...")
+      (sleep-for 2)
+      (message "Running lein clean...")
+      (let ((exit (shell-command "lein clean")))
+	(if (zerop exit) (cider-jack-in prompt-project)
+	  (message "Could not run lein clean"))))
+    ;; Enable company-mode
+    (require 'company)
+    (add-hook 'cider-repl-mode-hook #'company-mode)
+    (add-hook 'cider-mode-hook #'company-mode)
+    (defun cider-clear-and-eval-defun-at-point
+	(interactive)
+      (cider-find-and-clear-repl-buffer)
+      (clear-message-buffer)
+      (cider-eval-defun-at-point))
+    (defun cider-pp (&optional prefix)
+      "Evaluate the expression preceding point.
+If invoked with a PREFIX argument, print the result in the current buffer."
+      (interactive "P")
+      (cider-interactive-eval
+       (format "(let [res %s] (clojure.pprint/pprint res) res)" (cider-last-sexp))))
+    (defun cider-set-validate ()
+      (interactive)
+      (cider-interactive-eval
+       "(do (require 'schema.core)
+        (schema.core/set-fn-validation! true))"))
+    (defun cider-clear-repl ()
+      "clear the relevant REPL buffer"
+      (interactive)
+      (cider-switch-to-relevant-repl-buffer)
+      (cider-repl-clear-buffer)
+      (cider-switch-to-last-clojure-buffer))
+    (defun cider-eval-buffer-and-set-ns ()
+      (interactive)
+      (cider-eval-buffer)
+      (cider-repl-set-ns))
+    (bind-keys
+     :map clojure-mode-map
+     ("C->"     . cljr-cycle-coll)
+     ("C-c C-j" . cider-jack-in)
+     ("C-,"     . cljr-unwind)
+     ("C-."     . cljr-thread)
+     ("C-`"       . cider-clear-and-eval-defun-at-point)
+     ("<f19>"     . cider-eval-last-sexp) ;; as C-x C-e
+     ("s-p s-p"   . cider-pp))
+    (bind-keys
+     :map cider-repl-mode-map
+     ("C-c C-o" . cider-repl-clear-buffer)
+     ("M-?"     . ac-nrepl-popup-doc))
+    (define-key cider-mode-map (kbd "C-x C-q")
+      (lambda ()
+	(interactive)
+	(cider-switch-to-relevant-repl-buffer)
+	(cider-repl-clear-buffer)
+	(cider-switch-to-last-clojure-buffer)
+	(cider-eval-last-sexp)
+	(cider-pp)))
+    (define-key clojure-mode-map (kbd "C-x s-p")
+      (lambda ()
+	(interactive)
+	(cider-eval-last-sexp)
+	(cider-repl-clear-buffer)
+	(cider-pp)))
+    (defun cider-eval-and-move-next ()
+      (interactive)
+      (outline-next-visible-heading 1)
+      (cider-eval-defun-at-point))
+    (defun cider-eval-and-move-previous ()
+      (interactive)
+      (outline-previous-visible-heading 2)
+      (cider-eval-defun-at-point))))
+
+(setq init-duration (time-to-seconds (time-since init-start)))

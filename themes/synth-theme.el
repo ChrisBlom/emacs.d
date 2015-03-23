@@ -37,16 +37,22 @@
 
 (defconst hex-regex
   (rx
-   (char ?#)
-   (repeat 6 (in "0123456789ABCDEF"))))
+   (syntax string-quote)
+   (group
+    (char ?#)
+    (repeat 6 (in "0123456789ABCDEF")))
+   (syntax string-quote)))
 
 (defun live-fontify-hex-colors (limit)
   (remove-overlays (point) limit 'fontify-hex-colors t)
   (while (re-search-forward hex-regex limit t)
     (let ((ov (make-overlay (match-beginning 0)
                             (match-end 0)))
-          (color (match-string 1)))
-      (overlay-put ov 'face  (list :background color))
+          (color (match-string 1))
+          (contrast (if (< 0.3 (string-to-number (match-string 4)))
+                        "black" "white")))
+      (overlay-put ov 'face  (list :background color :foreground contrast
+                                   :box '(:line-width 1 :color contrast)))
       (overlay-put ov 'fontify-hex-colors t)
       (overlay-put ov 'evaporate t)))
   ;; return nil telling font-lock not to fontify anything from this
@@ -58,6 +64,11 @@
   (font-lock-add-keywords nil
                           '((live-fontify-hsl-colors)
 			    (live-fontify-hex-colors))))
+
+(defun live-fontify-hex-colours-in-current-buffer ()
+  (interactive)
+  (font-lock-add-keywords nil
+                          '((live-fontify-hex-colors))))
 
 (deftheme synth "Synth color theme")
 
@@ -206,6 +217,7 @@ Also bind `class' to ((class color) (min-colors 89))."
      `(company-tooltip-common    ((t (:inherit font-lock-constant-face))))
      `(ahs-definition-face       ((t (:underline t :inverse-video t))))
      `(ahs-face                  ((t (:underline t ))))
+     `(hl-sexp-face              ((t (:underline nil :box nil :inverse-video nil :background ,(hsl 0.3 0.3 0.5)))))
      `(dired-mark ((t (:foreground ,(hsl 0.55 0.7 0.5) :bold t :underline ,(hsl 0.5 0.2 0.2)))))
 
      `(hs-fringe ((t (:foreground "#0000FF" :box (:line-width 2 :color "grey5" :style released-button)))))

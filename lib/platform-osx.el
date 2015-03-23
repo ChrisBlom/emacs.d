@@ -7,7 +7,6 @@
   (setq default-input-method "MacOSX")
 
   ;; Make cut and paste work with the OS X clipboard
-
   (defun live-copy-from-osx ()
     (shell-command-to-string "pbpaste"))
 
@@ -26,9 +25,9 @@
   (setq system-name (car (split-string system-name "\\.")))
 
   (require 's)
-  
+
   ;; replace spaces with : on osx;
-  (setenv "PATH" 
+  (setenv "PATH"
 	  (s-join ":"
 		  (cons "/usr/local/bin"
 			(split-string (getenv "PATH") ":"))))
@@ -36,16 +35,5 @@
   ;; copy PATH to exec path
   (setq exec-path (split-string (getenv "PATH") ":"))
 
-  
-  ;; Ensure the exec-path honours the shell PATH
- ; (live-add-pack-lib "exec-path-from-shell")
- ; (require 'exec-path-from-shell)
-;  (exec-path-from-shell-initialize)
 
-  ;; Ignore .DS_Store files with ido mode
-  ; (add-to-list 'ido-ignore-files "\\.DS_Store")
-
-  
   )
-
-
