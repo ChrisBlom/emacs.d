@@ -11,6 +11,7 @@
 	cider-eval-last-sexp-and-replace
 	cljr-cycle-coll
 	cljr-thread
+	clojure-toggle-keyword-string
 	cua-copy-region
 	cua-paste
 	electric-newline-and-maybe-indent
@@ -22,6 +23,7 @@
 	kill-region
 	live-delete-whitespace-except-one
 	live-paredit-forward-kill-sexp
+	magit-discard-item
 	move-line-up
 	org-delete-char
 	org-self-insert-command
@@ -61,5 +63,6 @@
 	mc/mark-previous-like-this-repeat
 	mouse-buffer-menu
 	mouse-drag-secondary
+	previous-buffer
 	smex
 	))

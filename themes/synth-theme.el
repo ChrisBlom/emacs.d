@@ -35,40 +35,30 @@
   ;; function
   nil)
 
-(defconst hex-regex
-  (rx
-   (syntax string-quote)
-   (group
-    (char ?#)
-    (repeat 6 (in "0123456789ABCDEF")))
-   (syntax string-quote)))
-
-(defun live-fontify-hex-colors (limit)
-  (remove-overlays (point) limit 'fontify-hex-colors t)
-  (while (re-search-forward hex-regex limit t)
-    (let ((ov (make-overlay (match-beginning 0)
-                            (match-end 0)))
-          (color (match-string 1))
-          (contrast (if (< 0.3 (string-to-number (match-string 4)))
-                        "black" "white")))
-      (overlay-put ov 'face  (list :background color :foreground contrast
-                                   :box '(:line-width 1 :color contrast)))
-      (overlay-put ov 'fontify-hex-colors t)
-      (overlay-put ov 'evaporate t)))
-  ;; return nil telling font-lock not to fontify anything from this
-  ;; function
-  nil)
-
 (defun live-fontify-hsl-colours-in-current-buffer ()
   (interactive)
   (font-lock-add-keywords nil
                           '((live-fontify-hsl-colors)
 			    (live-fontify-hex-colors))))
 
+
+(defun live-fontify-hex-colors (limit)
+  (remove-overlays (point) limit 'fontify-hex-colors t)
+  (while (re-search-forward "\\(#[[:xdigit:]]\\{6\\}\\)" limit t)
+    (let ((ov (make-overlay (match-beginning 0)
+                            (match-end 0))))
+      (overlay-put ov 'face  (list :background (match-string 1) :foreground "black"))
+      (overlay-put ov 'fontify-hex-colors t)
+      (overlay-put ov 'evaporate t)))
+  ;; return nil telling font-lock not to fontify anything from this
+  ;; function
+  nil)
+
 (defun live-fontify-hex-colours-in-current-buffer ()
   (interactive)
   (font-lock-add-keywords nil
-                          '((live-fontify-hex-colors))))
+                         '((live-fontify-hex-colors))))
+
 
 (deftheme synth "Synth color theme")
 
@@ -138,13 +128,13 @@ Also bind `class' to ((class color) (min-colors 89))."
      `(font-lock-comment-face ((t (:foreground ,(hsl 0.45 0.05 0.45) :slant italic))))
      `(font-lock-comment-delimiter-face ((t (:foreground "#667477" :slant italic))))
      `(font-lock-constant-face ((t (:foreground ,(hsl 1.7 0.9 0.8)))))
-     `(font-lock-string-face ((t (:foreground ,(hsl 0.15 0.8 0.7)))))
-     `(font-lock-doc-face ((t (:foreground ,(hsl 0.15 0.7 0.8) :slant italic :slant italic))))
+     `(font-lock-string-face ((t (:foreground ,(hsl 0.15 0.7 0.8)))))
+     `(font-lock-doc-face ((t (:foreground ,(hsl 0.15 0.8 0.7) :slant italic :slant italic))))
      `(font-lock-variable-name-face ((t (:foreground ,(hsl 0.55 0.7 0.5) :bold t :underline ,(hsl 0.5 0.2 0.2)))))
      `(font-lock-function-name-face ((t (:foreground ,(hsl 0.45 0.7 0.5) :bold t :underline ,(hsl 0.5 0.2 0.2)))))
-     `(font-lock-keyword-face ((t (:foreground ,(hsl 0.5 0.8 0.7)))))
+     `(font-lock-keyword-face       ((t (:foreground ,(hsl 0.5 0.8 0.7)))))
      `(font-lock-negation-char-face ((t (:weight bold))))
-     `(font-lock-preprocessor-face ((t (:foreground ,(hsl 0.3 0.6 0.75)))))
+     `(font-lock-preprocessor-face  ((t (:foreground ,(hsl 0.3 0.6 0.75)))))
      `(font-lock-regexp-grouping-backslash ((t (:foreground ,(hsl 0.7 0.8 0.8) :weight bold))))
      `(font-lock-regexp-grouping-construct ((t (:foreground ,(hsl 0.7 0.8 0.8):weight bold))))
      `(font-lock-type-face ((t (:foreground ,(hsl 0.6 0.6 0.8)))))
@@ -153,9 +143,10 @@ Also bind `class' to ((class color) (min-colors 89))."
      `(icompletep-determined ((t (:foreground "#A6E22E"))))
      `(icompletep-keys ((t (:foreground "#F92672"))))
      `(icompletep-nb-candidates ((t (:foreground "#AE81FF"))))
-     `(isearch ((t (:foreground ,(hsl 0.45 0.7 0.9) :background ,(hsl 0.75 0.7 0.2)))))
+     ;; isearch
+     `(isearch ((t (:foreground ,(hsl 0.45 0.7 0.9) :background ,(hsl 0.75 0.7 0.2) :inverse-video t))))
      `(isearch-fail ((t (:foreground "#FFFFFF" :background "#333333"))))
-     `(lazy-highlight ((t (:foreground "#465457" :background "#000000"))))
+     `(lazy-highlight ((t (:foreground ,(hsl 0.6 0.3 0.6) :background "#000000" :underline nil :inverse-video t) )))
      `(markdown-italic-face ((t (:slant italic))))
      `(markdown-bold-face ((t (:weight bold))))
      `(markdown-header-face ((t (:weight normal))))
@@ -186,15 +177,15 @@ Also bind `class' to ((class color) (min-colors 89))."
      `(outline-7 ((t (:foreground "#F92672"))))
      `(outline-8 ((t (:foreground "#A6E22E"))))
      `(secondary-selection ((t (:background "#272822"))))
-     `(show-paren-match-face ((t (:foreground "#000000" :background "#FD971F"))))
+     `(show-paren-match-face ((t (:underline nil :bold t :foreground ,(hsl 0.1 1 0.5)))))
      `(show-paren-mismatch-face ((t (:foreground "#960050" :background "#1E0010"))))
      `(widget-inactive-face ((t (:background "#ff0000"))))
-     `(woman-addition ((t (:foreground "#AE81FF"))))
-     `(woman-bold ((t (:foreground "#F92672"))))
-     `(woman-italic ((t (:foreground "#A6E22E"))))
-     `(woman-unknown ((t (:foreground "#66D9EF"))))
+     ;;
      `(eval-sexp-fu-flash ((t (:inverse-video t :foreground "#6e8b3d" :background "white" ))))
      `(pulse-highlight-start-face ((t (:background ,(hsl 0.35 0.7 0.5)))))
+
+      `(highlight-numbers-number ((t (:inherit font-lock-constant-face :foreground ,(hsl 0.35 0.4 0.8) ))))
+     ;; Rainbow delimeters
      `(rainbow-delimiters-depth-1-face ((t (:foreground  ,(hsl (/ 6 10.0) paren-sat paren-lum)))))
      `(rainbow-delimiters-depth-2-face ((t (:foreground  ,(hsl (/ 1 10.0) paren-sat paren-lum)))))
      `(rainbow-delimiters-depth-3-face ((t (:foreground  ,(hsl (/ 10 10.0) paren-sat paren-lum)))))
@@ -207,21 +198,28 @@ Also bind `class' to ((class color) (min-colors 89))."
      `(rainbow-delimiters-depth-10-face ((t (:foreground ,(hsl (/ 9 10.0) paren-sat paren-lum)))))
      `(rainbow-delimiters-depth-11-face ((t (:foreground ,(hsl (/ 3 10.0) paren-sat paren-lum)))))
      `(rainbow-delimiters-unmatched-face ((t (:foreground "white" :italic t :bold t :background "red"))))
+     ;; Git gutter
      `(git-gutter:unchanged ((t (:background nil :inherit 'default))))
      `(git-gutter:added     ((t (:background nil :foreground "#009400"))))
      `(git-gutter:modified  ((t (:foreground "#DD8C00" :inherit 'default))))
-     `(company-tooltip           ((t (:inherit default :background "#3A3C3D"))))
-     `(company-scrollbar-bg      ((t (:background ,(color-lighten-name "black" 15)))))
-     `(company-scrollbar-fg      ((t (:background ,(color-lighten-name "black" 10)))))
-     `(company-tooltip-selection ((t (:inherit font-lock-function-name-face))))
-     `(company-tooltip-common    ((t (:inherit font-lock-constant-face))))
-     `(ahs-definition-face       ((t (:underline t :inverse-video t))))
-     `(ahs-face                  ((t (:underline t ))))
+     ;; Company mode
+     `(company-tooltip           ((t (:inherit default :foreground "gray" :background "#3A4C4D"))))
+     `(company-scrollbar-bg      ((t (:background ,(hsl 0.5 0.2 0.3)))))
+     `(company-scrollbar-fg      ((t (:background ,(hsl 0.5 0.2 0.5)))))
+     `(company-tooltip-common    ((t (:inherit company-tooltip :foreground "gray"))))
+     `(company-tooltip-selection ((t (:inherit company-tooltip :foreground ,synth-fg :bold t ))))
+     `(company-tooltip-common-selection ((t (:inherit company-tooltip :foreground ,synth-fg :bold nil))))
+     `(company-tooltip-annotation ((t (:inherit company-tooltip :foreground ,(hsl 0.45 0.3 0.5)))))
+
+     `(ahs-definition-face       ((t (:underline t :bold t :background nil))))
+     `(ahs-plugin-whole-buffer-face       ((t (:underline t :bold t :background nil))))
+     `(ahs-face                  ((t (:underline t :background nil))))
+
      `(hl-sexp-face              ((t (:underline nil :box nil :inverse-video nil :background ,(hsl 0.3 0.3 0.5)))))
      `(dired-mark ((t (:foreground ,(hsl 0.55 0.7 0.5) :bold t :underline ,(hsl 0.5 0.2 0.2)))))
 
      `(hs-fringe ((t (:foreground "#0000FF" :box (:line-width 2 :color "grey5" :style released-button)))))
-     `(hs-hidden      ((t (:foreground "#bbffaa" :background "#555555" :underline t))))
+     `(hs-hidden      ((t (:foreground "#bbffaa" :background "#555555" :underline) t)))
      ;; smart-mode-line
      `(mode-line-inactive ((t :foreground "gray60" :background ,(hsl 0.3 0.0 0.2) :inverse-video nil)))
      `(mode-line     ((t :foreground "gray100" :background ,(hsl 0.55 0.5 0.29) :inverse-video nil)))

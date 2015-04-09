@@ -11,6 +11,8 @@
 (or (package-installed-p 'use-package)
     (package-install 'use-package))
 
+;(package-refresh-contents)
+
 ;; organized package loading framework
 (require 'use-package)
 
@@ -163,27 +165,31 @@ and so on."
 (use-package expand-region
   :ensure t
   :config
-  (progn
-    (global-set-key (kbd "M-]") 'er/expand-region)
-    (global-set-key (kbd "M-[") 'er/contract-region)
-    (bind-keys
-     :map global-map
-     ("M-("       . er/contract-region)
-     ("M-)"       . er/expand-region))))
+  (bind-keys
+   :map global-map
+   ("M-]" . er/expand-region)
+   ("M-[" . er/contract-region)))
 
 (use-package multiple-cursors
   :ensure t
   :pre-load (setq mc/list-file (f-join user-emacs-directory "etc" "multiple-cursors-prefs.el"))
   :config
-  (progn
-    (bind-keys
-     ("C-c m h" . mc-hide-unmatched-lines-mode)
-     ("C-c m a" . mc/mark-all-like-this-dwim)
-     ("C-c m d" . mc/mark-all-symbols-like-this-in-defun))
-    (global-set-key (kbd "s-]") 'mc/mark-next-like-this)
-    (global-set-key (kbd "s-[") 'mc/mark-previous-like-this)
-    (global-set-key (kbd "s-{") 'mc/unmark-previous-like-this)
-    (global-set-key (kbd "s-}") 'mc/unmark-next-like-this)))
+  (bind-keys
+   ("C-c m h" . mc-hide-unmatched-lines-mode)
+   ("C-c m a" . mc/mark-all-like-this-dwim)
+   ("C-c m d" . mc/mark-all-symbols-like-this-in-defun)
+   ("s-]" . mc/mark-next-like-this)
+   ("s-[" . mc/mark-previous-like-this)
+   ("s-{" . mc/unmark-previous-like-this)
+   ("s-}" . mc/unmark-next-like-this)))
+
+(use-package change-inner
+  :ensure t
+  :config
+  (bind-keys
+   ("M-i" . change-inner)
+   ("M-o" . change-outer)))
+
 
 (use-package paredit
   :ensure t
@@ -266,12 +272,13 @@ and so on."
 (use-package projectile
   :ensure t
   :pre-load
-  (setq projectile-known-projects-file (f-tmp-file "projectile" "projectile-bookmarks.eld"))
+  (setq projectile-known-projects-file (f-tmp-file "projectile" "projectile-bookmarks.eld")
+	projectile-cache-file (f-tmp-file "projectile" "projectile.cache")
+	)
   :config
   (progn
     (use-package ack-and-a-half :ensure t)
     (projectile-global-mode +1)
-    (setq projectile-cache-file (f-tmp-file "projectile" "projectile.cache"))
     (setq projectile-mode-line-lighter "P")
     (setq projectile-mode-line "P") ;; smart modeline already shows the current projectile project
     (setq projectile-completion-system 'ido)
@@ -289,14 +296,7 @@ and so on."
   :diminish "c "
   :config
   (progn
-    (bind-keys
-     :map company-mode-map
-     ("C-:" . helm-company))
-    (bind-keys
-     :map company-active-map
-     ("C-n" . company-select-next-or-abort)
-     ("C-p" . company-select-previous-or-abort))
-    (define-key company-active-map (kbd "C-:") 'helm-company)
+    (global-company-mode +1)
     (setq company-minimum-prefix-length 1
 	  company-idle-delay 0.01
 	  company-selection-wrap-around t
@@ -308,16 +308,29 @@ and so on."
 	  ;; dont downcase completions
 	  company-dabbrev-downcase nil
 	  company-transformers '(company-sort-by-occurrence company-sort-by-backend-importance))
-
+    (bind-keys
+     :map company-mode-map
+     ("C-:" . helm-company))
+    (bind-keys
+     :map company-active-map
+     ("C-n" . company-select-next-or-abort)
+     ("C-p" . company-select-previous-or-abort)
+     ("C-:" . helm-company))
     (dotimes (i 10)
-      (define-key company-mode-map (read-kbd-macro (format "s-%d" i)) 'company-complete-number))
-    (global-company-mode +1)))
+      (define-key company-mode-map (read-kbd-macro (format "s-%d" i)) 'company-complete-number))))
 
 ;; use helm to select company completions
 (use-package helm-company
   :ensure t
   :bind (("C-:" . helm-company)
 	 ("C-;" . helm-company)))
+
+(use-package company-quickhelp
+  :ensure t
+  :config
+  (progn
+    (company-quickhelp-mode 1)
+    (setq company-quickhelp-delay 0.3)))
 
 ;; prettier and smarter mode line
 (use-package smart-mode-line
@@ -411,7 +424,6 @@ and so on."
 		(push '(">=" . ?≥) prettify-symbols-alist)
 		(push '("comp" . ?○) prettify-symbols-alist)))))
 
-
 ;; Show documentation/information with M-RET
 (define-key lisp-mode-shared-map (kbd "M-RET") 'live-lisp-describe-thing-at-point)
 
@@ -435,10 +447,14 @@ and so on."
     (add-hook 'clojure-mode 'auto-highlight-symbol-mode))
   :config
   (progn
+    (setq ahs-include "^[0-9A-Za-z/_.,:;*+=&%|$#@!^?>-]+$")
     (setq ahs-default-range 'ahs-range-whole-buffer)
     (setq ahs-select-invisible 'temporary)
+    (setq ahs-idle-interval 0.25)
     (bind-keys
      :map auto-highlight-symbol-mode-map
+     ("M-<left>" . nil)
+     ("M-<right>" . nil)
      ("M-F" . ahs-forward)
      ("M-B" . ahs-backward)
      ("s-e" . ahs-edit-mode)
@@ -448,7 +464,7 @@ and so on."
      ("s-B" . ahs-backward-definition)
      ("M-E" . ahs-edit-mode))))
 
-;;
+;; snippets
 (use-package yasnippet
   :ensure t
   :commands yas-minor-mode
@@ -458,7 +474,8 @@ and so on."
 		 (f-join user-emacs-directory "etc" "snippets"))))
 
 (use-package dockerfile-mode
-  :ensure t)
+  :ensure t
+  :commands (dockerfile-mode))
 
 (use-package restclient
   :ensure t
@@ -485,34 +502,24 @@ and so on."
 (use-package tramp
   :config
   (progn
-    ;; Problem with TRAMP mode
+    (setq tramp-default-method "sshx")
+    ;; Workaround for problem with TRAMP mode: override tmp dir
     ;; Control Path too long error
     ;; TMPDIR variable is really large
     ;; http://lists.macosforge.org/pipermail/macports-tickets/2011-June/084295.html
-    (setq tramp-default-method "sshx")
     (setenv "TMPDIR" "/tmp")
-    (getenv "TMPDIR")
-
     (setq tramp-auto-save-directory (f-tmp-file "tramp" "autosaves/" ))))
-
-;; start the server so clients can connect to it
-(require 'server)
-(if (not (server-running-p)) (server-start))
 
 (use-package geiser
   :ensure t
   :commands (run-racket run-geiser geiser-mode)
   :config
   (progn
-
     (defun geiser-save-and-load-buffer ()
       (interactive)
       (save-buffer)
       (geiser-load-current-buffer))
-
-    (require 'geiser)
     (push '("lambda"  . ?λ) prettify-symbols-alist)))
-
 
 (use-package racket-mode
   :ensure t
@@ -553,7 +560,6 @@ and so on."
   (progn
     (setq magit-save-some-buffers nil)))
 
-
 (use-package markdown-mode
   :ensure t
   :init (progn
@@ -569,8 +575,6 @@ and so on."
 (use-package skewer-mode
   :ensure t
   :commands (skewer-mode))
-
-
 
 (use-package flycheck
   :ensure t
@@ -601,24 +605,17 @@ and so on."
  ;; If there is more than one, they won't work right.
  )
 
+(use-package clj-refactor
+  :ensure t)
+
 (use-package cider
   :ensure t
-  :pin melpa-stable
+  ; :pin melpa-stable
   :commands (cider-jack-in cider-mode)
   :config
   (progn
     (require 'clojure-mode)
-    (bind-keys
-     :map cider-mode-map
-     ("M-RET"     . cider-doc)
-     ("C-x M-e"   . cider-eval-last-sexp-and-replace)
-     ("C-x M-r"   . cider-eval-last-sexp-to-repl)
-     ("C-c t t"   . cider-test-run-tests)
-     ("C-c C-j"   . cider-jack-in)
-     ("C-c C-q"   . cider-quit)
-     ("C-c r c"   . cider-rotate-connection)
-     ("C-c p-p"   . nil) ;; conflict with projectile
-     ("C-c C-o"   . cider-clear-repl))
+
     (when (eq system-type 'windows-nt)
       (add-hook 'nrepl-mode-hook 'live-windows-hide-eol ))
     (add-hook 'cider-repl-mode-hook
@@ -667,49 +664,77 @@ restart the server."
       (let ((exit (shell-command "lein clean")))
 	(if (zerop exit) (cider-jack-in prompt-project)
 	  (message "Could not run lein clean"))))
+
     ;; Enable company-mode
     (require 'company)
     (add-hook 'cider-repl-mode-hook #'company-mode)
     (add-hook 'cider-mode-hook #'company-mode)
-    (defun cider-clear-and-eval-defun-at-point
+
+    (defun cider-clear-and-eval-defun-at-point ()
 	(interactive)
       (cider-find-and-clear-repl-buffer)
       (clear-message-buffer)
       (cider-eval-defun-at-point))
+
+    (defun cider-eval-to-point ()
+      (interactive)
+      (cider-eval-region (point-min) (point)))
+
     (defun cider-pp (&optional prefix)
       "Evaluate the expression preceding point.
 If invoked with a PREFIX argument, print the result in the current buffer."
       (interactive "P")
       (cider-interactive-eval
        (format "(let [res %s] (clojure.pprint/pprint res) res)" (cider-last-sexp))))
+
     (defun cider-set-validate ()
       (interactive)
       (cider-interactive-eval
        "(do (require 'schema.core)
         (schema.core/set-fn-validation! true))"))
+
     (defun cider-clear-repl ()
       "clear the relevant REPL buffer"
       (interactive)
       (cider-switch-to-relevant-repl-buffer)
       (cider-repl-clear-buffer)
       (cider-switch-to-last-clojure-buffer))
+
     (defun cider-eval-buffer-and-set-ns ()
       (interactive)
       (cider-eval-buffer)
       (cider-repl-set-ns))
+
+    (bind-keys
+     :map cider-mode-map
+     ("M-RET"     . cider-doc)
+     ("C-x M-e"   . cider-eval-last-sexp-and-replace)
+     ("C-x M-r"   . cider-eval-last-sexp-to-repl)
+     ("C-x C-k"   . cider-eval-buffer)
+     ("C-x M-h"   . cider-eval-to-point)
+     ("C-c t t"   . cider-test-run-tests)
+     ("C-c C-j"   . cider-jack-in)
+     ("C-c C-q"   . cider-quit)
+     ("C-c r c"   . cider-rotate-connection)
+     ("C-c p-p"   . nil) ;; conflict with projectile
+     ("C-c C-o"   . cider-clear-repl))
+
     (bind-keys
      :map clojure-mode-map
      ("C->"     . cljr-cycle-coll)
+     ("s-;"     . clojure-toggle-keyword-string)
      ("C-c C-j" . cider-jack-in)
      ("C-,"     . cljr-unwind)
      ("C-."     . cljr-thread)
      ("C-`"       . cider-clear-and-eval-defun-at-point)
      ("<f19>"     . cider-eval-last-sexp) ;; as C-x C-e
      ("s-p s-p"   . cider-pp))
+
     (bind-keys
      :map cider-repl-mode-map
      ("C-c C-o" . cider-repl-clear-buffer)
      ("M-?"     . ac-nrepl-popup-doc))
+
     (define-key cider-mode-map (kbd "C-x C-q")
       (lambda ()
 	(interactive)
@@ -718,19 +743,63 @@ If invoked with a PREFIX argument, print the result in the current buffer."
 	(cider-switch-to-last-clojure-buffer)
 	(cider-eval-last-sexp)
 	(cider-pp)))
+
     (define-key clojure-mode-map (kbd "C-x s-p")
       (lambda ()
 	(interactive)
 	(cider-eval-last-sexp)
 	(cider-repl-clear-buffer)
 	(cider-pp)))
+
     (defun cider-eval-and-move-next ()
       (interactive)
       (outline-next-visible-heading 1)
       (cider-eval-defun-at-point))
+
     (defun cider-eval-and-move-previous ()
       (interactive)
       (outline-previous-visible-heading 2)
-      (cider-eval-defun-at-point))))
+      (cider-eval-defun-at-point)))
+
+  )
+
+;; start the server so clients can connect to it
+(require 'server)
+(if (not (server-running-p))
+    (progn
+      (message "Starting server")
+      (server-start)
+      (message "Started server"))
+  (message "Server already running"))
+
+(defun set-pulse ()
+  (interactive)
+  (setq eval-pulse-depth 1))
+
+(set-pulse)
+
+;; Display narrowing by graying out the rest
+(use-package fancy-narrow
+  :ensure t
+  :init (add-hook 'prog-mode-hook #'fancy-narrow-mode)
+  :commands (fancy-narrow-mode))
+
+;; Fontlocking for numbers
+(use-package highlight-numbers
+  :ensure t
+  :init (add-hook 'prog-mode-hook #'highlight-numbers-mode)
+  :commands (highlight-numbers-mode))
+
+;; Move buffers around
+(use-package buffer-move
+  :ensure t
+  :bind
+  (("C-c w <right>" . buf-move-right)
+   ("C-c w <left>"  . buf-move-left)
+   ("C-c w <up>"    . buf-move-up)
+   ("C-c w <down>"  . buf-move-down)))
+
+(setq split-height-threshold nil)
+(setq split-width-threshold 0)
 
 (setq init-duration (time-to-seconds (time-since init-start)))
