@@ -3,6 +3,7 @@
 
 (setq mc/cmds-to-run-for-all
       '(
+	ahs-edit-mode
 	backward-delete-char
 	beginning-of-buffer
 	browse-kill-ring
@@ -10,6 +11,8 @@
 	cider-eval-last-sexp
 	cider-eval-last-sexp-and-replace
 	cljr-cycle-coll
+	cljr-slash
+	cljr-splice-sexp-killing-backward
 	cljr-thread
 	clojure-toggle-keyword-string
 	cua-copy-region
@@ -18,6 +21,7 @@
 	end-of-buffer
 	eval-defun
 	eval-last-sexp
+	helm-maybe-exit-minibuffer
 	hs-toggle-hiding
 	indent-for-tab-command
 	kill-region
@@ -26,6 +30,8 @@
 	magit-discard-item
 	move-line-up
 	org-delete-char
+	org-kill-line
+	org-metaright
 	org-self-insert-command
 	org-todo
 	paredit-backslash
