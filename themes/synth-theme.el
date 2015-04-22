@@ -123,16 +123,16 @@ Also bind `class' to ((class color) (min-colors 89))."
      `(sml/modes          ((t (:inherit sml/global :foreground ,(hsl 0.24 0.4 0.4)))))
      `(sml/prefix         ((t (:inherit sml/global :foreground ,(hsl 0.1 0.8 0.4) ))))
      `(sml/filename       ((t (:inherit sml/global :foreground ,(hsl 0.60 0.8 0.7) :weight bold))))
-
+     ;; font lock faces
      `(font-lock-builtin-face ((t (:foreground ,(hsl 0.35 0.5 0.7)))))
      `(font-lock-comment-face ((t (:foreground ,(hsl 0.45 0.05 0.45) :slant italic))))
      `(font-lock-comment-delimiter-face ((t (:foreground "#667477" :slant italic))))
      `(font-lock-constant-face ((t (:foreground ,(hsl 1.7 0.9 0.8)))))
      `(font-lock-string-face ((t (:foreground ,(hsl 0.15 0.7 0.8)))))
      `(font-lock-doc-face ((t (:foreground ,(hsl 0.15 0.8 0.7) :slant italic :slant italic))))
-     `(font-lock-variable-name-face ((t (:foreground ,(hsl 0.55 0.7 0.5) :bold t :underline ,(hsl 0.5 0.2 0.2)))))
-     `(font-lock-function-name-face ((t (:foreground ,(hsl 0.45 0.7 0.5) :bold t :underline ,(hsl 0.5 0.2 0.2)))))
-     `(font-lock-keyword-face       ((t (:foreground ,(hsl 0.5 0.8 0.7)))))
+     `(font-lock-variable-name-face ((t (:foreground ,(hsl 0.55 0.7 0.55) :bold t :underline nil))))
+     `(font-lock-function-name-face ((t (:foreground ,(hsl 0.45 0.7 0.5) :bold t :underline nil))))
+     `(font-lock-keyword-face       ((t (:foreground ,(hsl 0.5 0.9 0.85)))))
      `(font-lock-negation-char-face ((t (:weight bold))))
      `(font-lock-preprocessor-face  ((t (:foreground ,(hsl 0.3 0.6 0.75)))))
      `(font-lock-regexp-grouping-backslash ((t (:foreground ,(hsl 0.7 0.8 0.8) :weight bold))))
@@ -231,7 +231,12 @@ Also bind `class' to ((class color) (min-colors 89))."
      `(sml/git       ((t :inherit sml/global :foreground ,(hsl 0.5 0.6 0.7))))
      `(sml/read-only ((t :inherit sml/not-modified :foreground "DeepSkyBlue")))
      `(persp-selected-face ((t :foreground "ForestGreen" :inherit sml/filename)))
-     `(helm-candidate-number ((t :foreground nil :background nil :inherit sml/filename))))))
+     `(helm-candidate-number ((t :foreground ,(hsl 0.45 0.6 0.5) :background nil)))
+
+
+     `(highlight-stages-level-1-face ((t :background ,(hsl 0.3 0.2 0.15))))
+
+     )))
 
 (and load-file-name
      (boundp 'custom-theme-load-path)

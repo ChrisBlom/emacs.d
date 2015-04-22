@@ -35,7 +35,7 @@
 (show-paren-mode 1)
 
 ;; left and right margin
-(set-window-fringes nil 4 4)
+(set-window-fringes nil 3 3)
 
 ;; enable debugging in init, it is turned off at the the end
 (setq debug-on-error t)
@@ -78,4 +78,12 @@
 (setq split-height-threshold 80)
 (setq split-width-threshold 120)
 
+
+(setq split-height-threshold nil)
+(setq split-width-threshold 0)
+
+
 (setq initial-scratch-message ";; Loaded emacs")
+
+;;
+(defalias 'yes-or-no-p 'y-or-n-p)

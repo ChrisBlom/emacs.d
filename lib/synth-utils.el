@@ -10,16 +10,6 @@
     (error (message "Invalid expression")
            (insert (current-kill 0)))))
 
-;; (defmacro rename-modeline (package-name mode new-name)
-;;   `(eval-after-load ,package-name
-;;      '(defadvice ,mode (after rename-modeline activate)
-;;         (setq mode-name ,new-name))))
-
-;; (rename-modeline "js2-mode" js2-mode "JS2")
-;; (rename-modeline "clojure-mode" clojure-mode "Clj")
-;; (rename-modeline "Emacs-Lisp" emacs-lisp-mode "EL")
-;; (rename-modeline "REPL" cider-repl-mode "repl")
-
 (defun rename-file-and-buffer ()
   "Rename the current buffer and file it is visiting."
   (interactive)
@@ -32,8 +22,6 @@
          (t
           (rename-file filename new-name t)
           (set-visited-file-name new-name t t)))))))
-
-(global-set-key (kbd "C-x M-r") 'rename-file-and-buffer)
 
 (defun delete-current-buffer-file ()
   "Removes file connected to current buffer and kills buffer."
@@ -48,7 +36,9 @@
         (kill-buffer buffer)
         (message "File '%s' successfully removed" filename)))))
 
-(global-set-key (kbd "C-x M-k") 'delete-current-buffer-file)
+(bind-keys
+ ("C-x M-k" . delete-current-buffer-file)
+ ("C-x M-r" . rename-file-and-buffer))
 
 (defun gitx ()
   (interactive)
@@ -80,6 +70,10 @@
 	(pulse-momentary-highlight-one-line (point)))
     (linum-mode -1)))
 
+(bind-keys
+ ("M-g g"   . goto-line-with-feedback)
+ ("M-g M-g" . goto-line-with-feedback))
+
 ;; todo : support regions and sexps
 (defun move-line-down ()
   (interactive)
@@ -99,8 +93,9 @@
     (forward-line -1)
     (move-to-column col)))
 
-(global-set-key (kbd "<s-up>") 'move-line-up)
-(global-set-key (kbd "<s-down>") 'move-line-down)
+(bind-keys
+ ("<s-up>"   .  move-line-up)
+ ("<s-down>"   .  move-line-down))
 
 (defmacro ignore-errors (&rest body)
   (declare (debug t) (indent 0))
@@ -176,3 +171,14 @@
 			     (and (symbolp obj) (fboundp obj) obj))))))
 	   (describe-function sym))
 	  ((setq sym (variable-at-point)) (describe-variable sym)))))
+
+
+
+(defun synth-delete-window (n)
+  "With numeric prefix: kill the window with number n, otherwise kills the current window"
+  (interactive "P")
+  (if (integerp n)
+      (delete-window (nth (- n 1) (butlast (window-number-list))) )
+    (delete-window)))
+
+(bind-keys ("C-x 0" . synth-delete-window))
