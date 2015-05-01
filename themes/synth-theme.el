@@ -210,14 +210,14 @@ Also bind `class' to ((class color) (min-colors 89))."
      `(company-tooltip-selection ((t (:inherit company-tooltip :foreground ,synth-fg :bold t ))))
      `(company-tooltip-common-selection ((t (:inherit company-tooltip :foreground ,synth-fg :bold nil))))
      `(company-tooltip-annotation ((t (:inherit company-tooltip :foreground ,(hsl 0.45 0.3 0.5)))))
-
+     ;; Auto highlight symbol
      `(ahs-definition-face       ((t (:underline t :bold t :background nil))))
      `(ahs-plugin-whole-buffer-face       ((t (:underline t :bold t :background nil))))
      `(ahs-face                  ((t (:underline t :background nil))))
 
      `(hl-sexp-face              ((t (:underline nil :box nil :inverse-video nil :background ,(hsl 0.3 0.3 0.5)))))
      `(dired-mark ((t (:foreground ,(hsl 0.55 0.7 0.5) :bold t :underline ,(hsl 0.5 0.2 0.2)))))
-
+     ;; Hide show
      `(hs-fringe ((t (:foreground "#0000FF" :box (:line-width 2 :color "grey5" :style released-button)))))
      `(hs-hidden      ((t (:foreground "#bbffaa" :background "#555555" :underline) t)))
      ;; smart-mode-line
@@ -231,7 +231,10 @@ Also bind `class' to ((class color) (min-colors 89))."
      `(sml/git       ((t :inherit sml/global :foreground ,(hsl 0.5 0.6 0.7))))
      `(sml/read-only ((t :inherit sml/not-modified :foreground "DeepSkyBlue")))
      `(persp-selected-face ((t :foreground "ForestGreen" :inherit sml/filename)))
+     ;; Helm
+
      `(helm-candidate-number ((t :foreground ,(hsl 0.45 0.6 0.5) :background nil)))
+     `(helm-separator ((t :foreground ,(hsl 0.1 0.8 0.5) :background nil)))
 
 
      `(highlight-stages-level-1-face ((t :background ,(hsl 0.3 0.2 0.15))))

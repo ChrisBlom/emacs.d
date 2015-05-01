@@ -13,8 +13,10 @@
 	cljr-cycle-coll
 	cljr-slash
 	cljr-splice-sexp-killing-backward
+	cljr-splice-sexp-killing-forward
 	cljr-thread
 	clojure-toggle-keyword-string
+	comment-dwim
 	cua-copy-region
 	cua-paste
 	electric-newline-and-maybe-indent
@@ -22,6 +24,7 @@
 	eval-defun
 	eval-last-sexp
 	helm-maybe-exit-minibuffer
+	helm-show-kill-ring
 	hs-toggle-hiding
 	indent-for-tab-command
 	kill-region

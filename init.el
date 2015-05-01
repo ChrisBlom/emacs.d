@@ -59,6 +59,13 @@
 ;; highlight current line
 (global-hl-line-mode)
 
+(use-package key-chord
+  :ensure t
+  :config
+  (progn
+    (key-chord-mode +1)
+    (setq key-chord-two-keys-delay 0.07)))
+
 (defun pulse-current-line ()
   (interactive)
   (pulse-momentary-highlight-one-line (point)))
@@ -98,6 +105,7 @@
     (flx-ido-mode +1)
     (icomplete-mode +1)
     (bind-keys :map ido-completion-map)
+    (key-chord-define global-map "fr" #'ido-recentf-open)
     (setq ido-enable-flex-matching t
 	  ;; disable ido faces to see flx highlights.
 	  ido-use-faces nil
@@ -119,13 +127,6 @@
       (if (find-file (ido-completing-read "Find recent file: " recentf-list))
 	  (message "Opening file...")
         (message "Aborting")))))
-
-(use-package key-chord
-  :ensure t
-  :config
-  (progn
-    (key-chord-mode +1)
-    (setq key-chord-two-keys-delay 0.07)))
 
 ;; From http://groups.google.com/group/gnu.emacs.help/browse_thread/thread/44728fda08f1ec8f?hl=en&tvc=2
 (defun make-repeatable-command (cmd)
@@ -290,7 +291,8 @@ and so on."
     (setq projectile-mode-line "P") ;; smart modeline already shows the current projectile project
     (setq projectile-completion-system 'ido)
     (key-chord-define projectile-mode-map "jk" #'projectile-switch-project)
-    (key-chord-define projectile-mode-map "df" #'projectile-find-file-dwim)))
+    (key-chord-define projectile-mode-map "df" #'projectile-find-file-dwim)
+    (key-chord-define projectile-mode-map "pt" #'projectile-toggle-between-implementation-and-test)))
 
 ;; selection framework
 (use-package helm
@@ -317,7 +319,8 @@ and so on."
     (setq helm-split-window-default-side 'below
 	  helm-split-window-in-side-p t
 	  helm-move-to-line-cycle-in-source t
-	  helm-display-header-line nil)
+	  helm-display-header-line nil
+	  helm-candidate-separator "ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ")
     (helm-autoresize-mode +1)))
 
 ;; project oriented helm commands
@@ -326,9 +329,6 @@ and so on."
   :config
   (progn
     (use-package ack-and-a-half :ensure t)
-    (bind-keys
-     :map projectile-mode-map
-     ("C-p" . projectile-commander))
     (bind-keys
      :map projectile-command-map
      ("f" .   helm-projectile-find-file-dwim)
@@ -463,13 +463,13 @@ and so on."
 ;; highlight, navigate and edit symbols
 (use-package auto-highlight-symbol
   :ensure t
-  :commands auto-highlight-symbol-mode
   :init
   (progn
     (add-hook 'emacs-lisp-mode-hook 'auto-highlight-symbol-mode)
     (add-hook 'clojure-mode 'auto-highlight-symbol-mode))
   :config
   (progn
+    (global-auto-highlight-symbol-mode +1)
     (setq ahs-include "^[0-9A-Za-z/_.,:;*+=&%|$#@!^?>-]+$")
     (setq ahs-default-range 'ahs-range-whole-buffer)
     (setq ahs-select-invisible 'temporary)
@@ -555,6 +555,8 @@ and so on."
     (add-hook 'racket-mode-hook
 	      (lambda ()
 		(paredit-mode +1)
+		(aggressive-indent-mode +1)
+		(auto-highlight-symbol-mode +1)
 ;		(eldoc-mode -1)
 		(prettify-symbols-mode +1)
 		(push '("lambda"  . ?λ) prettify-symbols-alist)))
@@ -603,9 +605,55 @@ and so on."
   :ensure t
   :commands (flycheck-mode))
 
+(defmacro evil-leader/set-keys (bindings)
+  (partition 2 bindings))
+
+(use-package evil-leader
+  :ensure t
+  :commands evil-leader
+  :config
+  (progn
+    (setq echo-keystrokes 0.02)
+    (global-evil-leader-mode +1)
+    (evil-leader/set-leader "<SPC>")
+    (evil-leader/set-key "<SPC>" #'ace-jump-mode)
+    (evil-leader/set-key "b" #'helm-buffers-list)
+    (evil-leader/set-key "pt" #'projectile-toggle-between-implementation-and-test)
+    (evil-leader/set-key "ps" #'helm-projectile-ag)
+    (evil-leader/set-key "pp" #'projectile-switch-project)
+    (evil-leader/set-key "pf" #'projectile-find-file-dwim)
+
+    (evil-leader/set-key "hc" #'helm-company)
+    (evil-leader/set-key "fs" #'save-buffer)
+    (evil-leader/set-key "fv" #'revert-buffer)
+    (evil-leader/set-key "fr" #'rename-file-and-buffer)
+    (evil-leader/set-key "fk" #'delete-current-buffer-file)
+
+
+    (evil-leader/set-key "fk" #'delete-current-buffer-file)
+
+
+
+
+    (evil-leader/set-key "c1" (lambda ()
+				(interactive)
+				(company-complete-number 1)) )
+    ))
+
+
+
+
 (use-package evil
   :ensure t
-  :commands (evil-mode))
+  :commands (evil-mode)
+  :config
+  (progn
+    (bind-keys
+     ("<f13>" . evil-mode)
+     ("C-c w e" . evil-mode))
+
+    (evil-define-key 'normal global-map " " nil)
+    ))
 
 
 (setq eval-pulse-depth 1)
@@ -622,6 +670,74 @@ and so on."
 		    :italic nil
 		    :foreground (hsl 0.2 0 0.9))
 
+
+;; (require 'rdp)
+;; (require 'peg)
+
+;; (setq max-specpdl-size 10000)
+;; (rdp-parse-string "a b"
+;; 		  '((let         "(let " "\\[" binding-pairs "\\]" ")") ; todo body
+;; 		    (binding-pair "[a-z]" " " "[a-z]")
+;; 		    (binding-pairs binding-pair [(" " binding-pairs) no-binding])
+;; ;		    (sym         . "[a-z0-9]")
+;; 		    (no-binding  . "")
+;; ;		    (bindings     "\[" binding-pair "\]")
+;; 		    ))
+
+;; (rdp-match)
+
+
+;; (progn (re-search-forward (rx "(let ["
+;; 			      (group (regexp ".*"))
+;; 			      "])"))
+;;        (let ((bindings (match-string 1)))
+;; 	 ()
+
+;; 	 ))
+
+;; (let [a b])
+
+
+;; (defun bindings-jit-highlighter (beg end)
+
+
+
+;;   )
+
+
+(defun bindings-jit-highlighter (beg end)
+  "The jit highlighter of highlight-stages."
+  (setq beg (progn (goto-char beg)
+                   (beginning-of-defun)
+                   (skip-syntax-backward "'-") ; skip newlines?
+                   (point))
+        end (progn (goto-char end)
+                   (end-of-defun)
+                   (skip-syntax-forward "'-") ; skip newlines?
+                   (point)))
+  (remove-overlays beg end 'category 'highlight-stages)
+  (highlight-stages--jit-highlighter-1 beg end 0))
+
+;; (re-search-forward (rx "#_"
+;; 		       (or
+;; 			(+ (syntax \w))
+;; 			(+ (syntax \s))
+;; 			(sequence
+;; 			 (syntax \( )
+;; 			 (minimal-match (regexp ".*"))
+;; 			 (syntax \))))))
+
+;; (fact "fields with the same path get the same id"
+;;       (let [c (sc/setup-db)
+;; 	      _ #_(aadsad  adsdasade)
+;; 	      tx  @(d/transact c [(persist-field (d/db c) ["abc"])] )
+;; 	      before   (d/entid (d/db c) [:field/path-edn (pr-str ["abc"])])
+;; 	      tx2  @(d/transact c [(persist-field (d/db c) ["abc"])] )]
+;;         (d/entid (d/db c) [:field/path-edn (pr-str ["abc"])])
+;;         => before
+;;         (:tempids tx2) => {}))
+
+
 (use-package clojure-mode
   :ensure t
   :commands clojure-mode
@@ -631,6 +747,20 @@ and so on."
     "Face used to font-lock logic variables (for datomic and cascalog)"
     :group 'clojure
     :package-version '(clojure-mode . "3.0.0"))
+
+  (defface note-face
+    '((t (:font-lock-comment-face
+	  :background "DarkOrange")))
+    "Face used to highligt notes in comments"
+    :group 'clojure
+    :package-version '(clojure-mode . "3.0.0"))
+
+  (defvar note-face 'note-face)
+
+  (set-face-attribute note-face nil
+		      :background "DarkOrange"
+                      :foreground "Black")
+
   :config
   (progn
     ;; fontlock logic vars
@@ -641,7 +771,6 @@ and so on."
 		 "\\>")
 	0
 	font-lock-keyword-face)))
-
 
     (font-lock-add-keywords
      'clojure-mode
@@ -657,6 +786,58 @@ and so on."
 		 "\\>")
 	0
 	font-lock-warning-face)))
+
+    ;; invocations
+    (font-lock-add-keywords 'clojure-mode
+			    `((,(concat "(\\(?:\.*/\\)?"
+					(regexp-opt '("facts?") t)
+					"\\>")
+			       1 font-lock-builtin-face)))
+
+    ;; anywhere
+    (font-lock-add-keywords 'clojure-mode
+			    `((,(concat "\\<"
+					(regexp-opt '("=>" "=not=>" "=contains=>") t)
+					"\\>")
+			       1 font-lock-builtin-face)))
+
+     ;; (font-lock-add-keywords 'clojure-mode
+     ;; 			       `((,(rx "#_"
+     ;; 				       (or
+     ;; 					(+ (syntax \w))
+     ;; 					(+ (syntax \s))
+     ;; 					(sequence
+     ;; 					 (syntax \( )
+     ;; 					 (minimal-match (regexp ".*"))
+    ;; 					 (syntax \)))))
+    ;; 				  1 font-lock-doc-face 'set)))
+
+    ;; (font-lock-add-keywords
+    ;;  'clojure-mode
+    ;;  `((,(rx "#_"
+    ;; 	     (or
+    ;; 	      (+ (syntax \w))
+    ;; 	      (+ (syntax \s))
+    ;; 	      (sequence "(" (regexp ".*") ")")
+    ;; 	      (sequence "[" (regexp ".*") "]")
+    ;; 	      (sequence "{" (regexp ".*") "}")))
+    ;; 	0
+    ;; 	font-lock-warning-face)))
+
+    (font-lock-add-keywords
+     'clojure-mode
+     `((,(concat
+	  "\\<"
+	  (regexp-opt '("TODO" "REVIEW" "XXX" "QUESTION" "BUG"))
+	  "\\>")
+	0
+	note-face t)))
+
+    (font-lock-add-keywords
+     'clojure-mode
+     `((,(concat "\\<" (regexp-opt '("@" "$")) "\\>")
+	0
+	font-lock-preprocessor-face)))
 
     (use-package clojure-mode-extra-font-locking :ensure t)
     (require 'clojure-mode-extra-font-locking)
@@ -737,13 +918,13 @@ and so on."
 		(eldoc-mode +1)
 		(paredit-mode +1)
 		(aggressive-indent-mode +1)
+		(auto-highlight-symbol-mode +1)
 		(yas-minor-mode +1)
 		(setq buffer-save-without-query t)
-		(prettify-symbols-mode +1)
-		(auto-highlight-symbol-mode +1)
 		(clj-refactor-mode +1)
 		(push '(">=" . ?≥) prettify-symbols-alist)
-		(push '("comp" . ?○) prettify-symbols-alist)))))
+		(push '("comp" . ?○) prettify-symbols-alist)
+		(prettify-symbols-mode +1)))))
 
 ;; (use-package midje-mode :ensure t
 ;;   :init (add-hook 'clojure-mode-hook 'midje-mode)
@@ -994,22 +1175,9 @@ If invoked with a PREFIX argument, print the result in the current buffer."
     (setq indent-guide-recursive nil)
     (setq indent-guide-char "¦")))
 
-;;  (use-package sublimity
-;;     :ensure t
-;;     :config
-;;     (progn
-;;       (require 'sublimity-attractive)))
+(use-package travis :ensure t)
 
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(custom-safe-themes
-   (quote
-    ("50598275d5ba41f59b9591203fdbf84c20deed67d5aa64ef93dd761c453f0e98" "91aecf8e42f1174c029f585d3a42420392479f824e325bf62184aa3b783e3564" "6a37be365d1d95fad2f4d185e51928c789ef7a4ccf17e7ca13ad63a8bf5b922f" default)))
- '(global-hl-line-mode t))
-
+(use-package haskell-mode :ensure t)
 
 (defun column (point)
   (save-excursion (goto-char point) (current-column)))
@@ -1038,3 +1206,14 @@ If invoked with a PREFIX argument, print the result in the current buffer."
 
 
 (defconst init-duration (time-to-seconds (time-since init-start)))
+
+
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(custom-safe-themes
+   (quote
+    ("50598275d5ba41f59b9591203fdbf84c20deed67d5aa64ef93dd761c453f0e98" "91aecf8e42f1174c029f585d3a42420392479f824e325bf62184aa3b783e3564" "6a37be365d1d95fad2f4d185e51928c789ef7a4ccf17e7ca13ad63a8bf5b922f" default)))
+ '(global-hl-line-mode t))

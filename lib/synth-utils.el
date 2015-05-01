@@ -179,6 +179,18 @@
   (interactive "P")
   (if (integerp n)
       (delete-window (nth (- n 1) (butlast (window-number-list))) )
-    (delete-window)))
+    (delete-window)
+    (balance-windows)))
 
-(bind-keys ("C-x 0" . synth-delete-window))
+(defun synth-delete-other-windows (n)
+  "With numeric prefix: kill the window with number n, otherwise kills the current window"
+  (interactive "P")
+  (when (integerp n)
+    (select-window (nth (- n 1) (butlast (window-number-list))) ))
+  (delete-other-windows))
+
+
+
+(bind-keys
+ ("C-x 0" . synth-delete-window)
+ ("C-x 1" . synth-delete-other-windows))
