@@ -32,7 +32,25 @@
 
 (defun helm-cider--candidate-transformer (candidates)
   (mapcar #'helm-cider-connection-info candidates))
-
 (defun helm-cider-connect ()
   (interactive)
   (cider-connect))
+
+(defun helm-cider ()
+  (helm-build-in-buffer-source "NREPL Connections"
+    :data (lambda () nrepl-connection-list)
+    :real-to-display #'helm-cider-connection-info
+    :action '(("Switch to NREPL connection" . (lambda (connection)
+						(helm-cider-switch-nrepl-connection-by-name connection)))
+	      ("New connection `M-c'" . helm-cider-connect)
+	      ("Close connection `M-k'" . helm-cider-close-connection)
+	      ("Remove project(s) `M-D'" . helm-projectile-remove-known-projecth))))
+
+(defun helm-cider-connections ()
+  (interactive)
+  (helm-other-buffer (helm-cider) "NREPL Connections"))
+
+(defun helm-cider-available-connections ()
+  (mapcar
+   (lambda (x) (format "%s:%s" (car x) (cadr x)))
+   (cider-locate-running-nrepl-ports)))
