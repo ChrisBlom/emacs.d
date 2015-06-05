@@ -11,18 +11,22 @@
 	cider-eval-last-sexp
 	cider-eval-last-sexp-and-replace
 	cljr-cycle-coll
+	cljr-raise-sexp
 	cljr-slash
 	cljr-splice-sexp-killing-backward
 	cljr-splice-sexp-killing-forward
 	cljr-thread
+	cljr-unwind
 	clojure-toggle-keyword-string
 	comment-dwim
 	cua-copy-region
 	cua-paste
 	electric-newline-and-maybe-indent
 	end-of-buffer
+	eval-and-replace
 	eval-defun
 	eval-last-sexp
+	forward-sentence
 	helm-maybe-exit-minibuffer
 	helm-show-kill-ring
 	hs-toggle-hiding
@@ -65,6 +69,7 @@
 (setq mc/cmds-to-run-once
       '(
 	delete-indentation
+	evil-normal-state
 	js2-down-mouse-3
 	js2-mode-show-node
 	markdown-exdent-or-delete
