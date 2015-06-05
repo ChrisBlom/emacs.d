@@ -194,3 +194,87 @@
 (bind-keys
  ("C-x 0" . synth-delete-window)
  ("C-x 1" . synth-delete-other-windows))
+
+
+(require 'color)
+
+(defvar srd
+      (rx
+       (group
+        (optional (in "+-"))
+        (one-or-more digit)
+        (optional
+         (char ".")
+         (one-or-more digit)))))
+
+(defun hsl (h s l)
+  (let ((rgb (color-hsl-to-rgb h s l)))
+    (apply 'color-rgb-to-hex rgb)))
+
+(defun lab (h s l)
+  (let ((rgb (color-lab-to-srgb h s l)))
+    (apply 'color-rgb-to-hex rgb)))
+
+(defun live-fontify-hsl-colors (limit)
+  (remove-overlays (point) limit 'fontify-hsl-colors t)
+  (while (re-search-forward (concat "\\((hsl " srd " " srd  " "srd ")\\)") limit t)
+    (let ((ov (make-overlay (match-beginning 0)
+                            (match-end 0)))
+          (color (hsl (string-to-number (match-string 2))
+                      (string-to-number (match-string 3))
+                      (string-to-number (match-string 4))))
+          (contrast (if (< 0.3 (string-to-number (match-string 4)))
+                        "black" "white")))
+      (overlay-put ov 'face  (list :background color :foreground contrast
+                                   :box '(:line-width 1 :color contrast)))
+      (overlay-put ov 'fontify-hsl-colors t)
+      (overlay-put ov 'evaporate t)))
+  ;; return nil telling font-lock not to fontify anything from this
+  ;; function
+  nil)
+
+(defun live-fontify-hsl-colours-in-current-buffer ()
+  (interactive)
+  (font-lock-add-keywords nil
+                          '((live-fontify-hsl-colors)
+			    (live-fontify-hex-colors))))
+
+
+(defun live-fontify-hex-colors (limit)
+  (remove-overlays (point) limit 'fontify-hex-colors t)
+  (while (re-search-forward "\\(#[[:xdigit:]]\\{6\\}\\)" limit t)
+    (let ((ov (make-overlay (match-beginning 0)
+                            (match-end 0))))
+      (overlay-put ov 'face  (list :background (match-string 1) :foreground "black"))
+      (overlay-put ov 'fontify-hex-colors t)
+      (overlay-put ov 'evaporate t)))
+  ;; return nil telling font-lock not to fontify anything from this
+  ;; function
+  nil)
+
+(defun live-fontify-hex-colours-in-current-buffer ()
+  (interactive)
+  (font-lock-add-keywords nil
+                         '((live-fontify-hex-colors))))
+
+(defun prelude-copy-file-name-to-clipboard ()
+  "Copy the current buffer file name to the clipboard."
+  (interactive)
+  (let ((filename (if (equal major-mode 'dired-mode)
+                      default-directory
+                    (buffer-file-name))))
+    (when filename
+      (kill-new filename)
+      (message "Copied buffer file name '%s' to the clipboard." filename))))
+
+(defun sudo-edit (&optional arg)
+  "Edit currently visited file as root.
+
+With a prefix ARG prompt for a file to visit.
+Will also prompt for a file to visit if current
+buffer is not visiting a file."
+  (interactive "P")
+  (if (or arg (not buffer-file-name))
+      (find-file (concat "/sudo:root@localhost:"
+                         (ido-read-file-name "Find file(as root): ")))
+    (find-alternate-file (concat "/sudo:root@localhost:" buffer-file-name))))
