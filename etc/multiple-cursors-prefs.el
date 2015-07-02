@@ -26,6 +26,7 @@
 	eval-and-replace
 	eval-defun
 	eval-last-sexp
+	evil-forward-char
 	forward-sentence
 	helm-maybe-exit-minibuffer
 	helm-show-kill-ring
@@ -37,14 +38,17 @@
 	magit-discard-item
 	move-line-up
 	org-delete-char
+	org-force-self-insert
 	org-kill-line
 	org-metaright
+	org-return-indent
 	org-self-insert-command
 	org-todo
 	paredit-backslash
 	paredit-backward-kill-word
 	paredit-backward-slurp-sexp
 	paredit-close-round
+	paredit-close-square
 	paredit-comment-dwim
 	paredit-doublequote
 	paredit-forward-barf-sexp
@@ -62,21 +66,27 @@
 	paredit-splice-sexp-killing-forward
 	paredit-split-sexp
 	repeat
+	sh-assignment
 	transpose-sexps
+	transpose-words
+	yaml-electric-dash-and-dot
 	yas-expand
 	))
 
 (setq mc/cmds-to-run-once
       '(
 	delete-indentation
+	evil-insert
 	evil-normal-state
-	js2-down-mouse-3
-	js2-mode-show-node
+	fancy-narrow-to-defun
+	fancy-widen
+	evil-normal-state
 	markdown-exdent-or-delete
 	mc/mark-next-like-this-repeat
 	mc/mark-previous-like-this-repeat
 	mouse-buffer-menu
 	mouse-drag-secondary
+	paredit-close-curly
 	previous-buffer
 	smex
 	))
