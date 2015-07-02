@@ -1,65 +1,5 @@
 (require 'color)
 
-(defvar srd
-      (rx
-       (group
-        (optional (in "+-"))
-        (one-or-more digit)
-        (optional
-         (char ".")
-         (one-or-more digit)))))
-
-(defun hsl (h s l)
-  (let ((rgb (color-hsl-to-rgb h s l)))
-    (apply 'color-rgb-to-hex rgb)))
-
-(defun lab (h s l)
-  (let ((rgb (color-lab-to-srgb h s l)))
-    (apply 'color-rgb-to-hex rgb)))
-
-(defun live-fontify-hsl-colors (limit)
-  (remove-overlays (point) limit 'fontify-hsl-colors t)
-  (while (re-search-forward (concat "\\((hsl " srd " " srd  " "srd ")\\)") limit t)
-    (let ((ov (make-overlay (match-beginning 0)
-                            (match-end 0)))
-          (color (hsl (string-to-number (match-string 2))
-                      (string-to-number (match-string 3))
-                      (string-to-number (match-string 4))))
-          (contrast (if (< 0.3 (string-to-number (match-string 4)))
-                        "black" "white")))
-      (overlay-put ov 'face  (list :background color :foreground contrast
-                                   :box '(:line-width 1 :color contrast)))
-      (overlay-put ov 'fontify-hsl-colors t)
-      (overlay-put ov 'evaporate t)))
-  ;; return nil telling font-lock not to fontify anything from this
-  ;; function
-  nil)
-
-(defun live-fontify-hsl-colours-in-current-buffer ()
-  (interactive)
-  (font-lock-add-keywords nil
-                          '((live-fontify-hsl-colors)
-			    (live-fontify-hex-colors))))
-
-
-(defun live-fontify-hex-colors (limit)
-  (remove-overlays (point) limit 'fontify-hex-colors t)
-  (while (re-search-forward "\\(#[[:xdigit:]]\\{6\\}\\)" limit t)
-    (let ((ov (make-overlay (match-beginning 0)
-                            (match-end 0))))
-      (overlay-put ov 'face  (list :background (match-string 1) :foreground "black"))
-      (overlay-put ov 'fontify-hex-colors t)
-      (overlay-put ov 'evaporate t)))
-  ;; return nil telling font-lock not to fontify anything from this
-  ;; function
-  nil)
-
-(defun live-fontify-hex-colours-in-current-buffer ()
-  (interactive)
-  (font-lock-add-keywords nil
-                         '((live-fontify-hex-colors))))
-
-
 (deftheme synth "Synth color theme")
 
 (defvar synth-colors-alist
@@ -100,6 +40,14 @@ Also bind `class' to ((class color) (min-colors 89))."
      `(region ((t (:background "#304D4D"))))
      `(fringe ((t (:foreground "#405D5D" :background "#232526"))))
      `(highlight ((t (:foreground "#000000" :background "#C4BE89"))))
+     `(secondary-selection ((t (:background ,(hsl 0.1 0.1 0.23)))))
+
+     `(magit-section-title ((t (:bold nil :underline t :background ,(hsl 0.1 0.1 0.3)))))
+
+     ;`(magit-item-highlight ((t (:background ,(hsl 0.1 0.1 0.23)))))
+
+
+
      `(hl-line ((t (:background "#293739"))))
      `(escape-glyph ((t (:foreground "#E6DB74"))))
      `(minibuffer-prompt ((t (:foreground "#66D9EF"))))
@@ -177,7 +125,8 @@ Also bind `class' to ((class color) (min-colors 89))."
      `(outline-7 ((t (:foreground "#F92672"))))
      `(outline-8 ((t (:foreground "#A6E22E"))))
      `(secondary-selection ((t (:background "#272822"))))
-     `(show-paren-match-face ((t (:underline nil :bold t :foreground ,(hsl 0.1 1 0.5)))))
+
+     `(show-paren-match-face ((t (:underline nil :bold t :foreground ,(hsl 0.5 1 0.95)))))
      `(show-paren-mismatch-face ((t (:foreground "#960050" :background "#1E0010"))))
      `(widget-inactive-face ((t (:background "#ff0000"))))
      ;;
@@ -230,14 +179,14 @@ Also bind `class' to ((class color) (min-colors 89))."
      `(sml/prefix    ((t :inherit sml/global :foreground ,(hsl 0.2 0.9 0.9))))
      `(sml/git       ((t :inherit sml/global :foreground ,(hsl 0.5 0.6 0.7))))
      `(sml/read-only ((t :inherit sml/not-modified :foreground "DeepSkyBlue")))
-     `(persp-selected-face ((t :foreground "ForestGreen" :inherit sml/filename)))
+
+     `(persp-selected-face ((t :foreground "white" :inherit sml/filename :underline t)))
      ;; Helm
 
      `(helm-candidate-number ((t :foreground ,(hsl 0.45 0.6 0.5) :background nil)))
      `(helm-separator ((t :foreground ,(hsl 0.1 0.8 0.5) :background nil)))
 
-
-     `(highlight-stages-level-1-face ((t :background ,(hsl 0.3 0.2 0.15))))
+     `(highlight-stages-level-1-face ((t :background ,(hsl 0.7 0.25 0.2))))
 
      )))
 

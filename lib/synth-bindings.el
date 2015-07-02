@@ -22,8 +22,9 @@
 ;; global bindings
 (bind-keys
  ("C-h"       . backward-delete-char)
+ ("M-h"       . backward-kill-word)
  ("C-z"       . nil)
- ("s-w"       . backward-kill-word)
+ ("s-w"       . kill-current-unmodified-buffer)
  ("C-c w 3"   . synth-two-windows)
  ("C-c w w"   . toggle-frame-fullscreen)
  ("C-c w s"   . toggle-window-split)
@@ -38,7 +39,19 @@
  ("M-'"       . repeat)
  ("C-x C-c"   . nil)
  ("C-x r q"   . kill-emacs)
+ ("<prior>"   . previous-buffer)
+ ("<next>"    . next-buffer)
+ ("s-<prior>" . persp-prev)
+ ("s-<next>"  . persp-next)
+
+ ("C-<prior>" . winner-undo)
+ ("C-<next>"  . winner-redo)
+
  ("s-t"       . nil))
+
+
+(define-key global-map (kbd "<s-b>") #'bury-buffer)
+
 
 (bind-keys
  :map emacs-lisp-mode-map

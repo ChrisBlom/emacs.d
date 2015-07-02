@@ -51,12 +51,15 @@ Also bind `class' to ((class color) (min-colors 89))."
    `(sml/global    ((t :foreground ,(hsl 0.5 0.1 0.5) :inverse-video nil)))
    `(sml/modes     ((t :inherit sml/global :foreground ,(hsl 0.45 0.6 0.5))))
    `(sml/filename  ((t :inherit sml/global :foreground ,(hsl 0.4 0.4 0.9) :weight bold)))
-   `(mode-line-buffer-id ((t :inherit sml/filename :foreground nil :background nil))) 
+   `(mode-line-buffer-id ((t :inherit sml/filename :foreground nil :background nil)))
    `(sml/prefix    ((t :inherit sml/global :foreground ,(hsl 0.2 0.9 0.9))))
    `(sml/git       ((t :inherit sml/global :foreground ,(hsl 0.5 0.6 0.7))))
    `(sml/read-only ((t :inherit sml/not-modified :foreground "DeepSkyBlue")))
-   `(persp-selected-face ((t :foreground "ForestGreen" :inherit sml/filename)))
+
+   `(persp-selected-face ((t :foreground "ForestGreen" :inherit sml/filename :underline t)))
    `(helm-candidate-number ((t :foreground nil :background nil :inherit sml/filename)))))
+
+
 
 
 (and load-file-name
@@ -70,5 +73,3 @@ Also bind `class' to ((class color) (min-colors 89))."
   ;; End:
 
 (provide-theme 'smart-mode-line-synth)
-
-  
