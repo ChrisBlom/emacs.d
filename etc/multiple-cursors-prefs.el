@@ -3,10 +3,18 @@
 
 (setq mc/cmds-to-run-for-all
       '(
+	ahs-back-to-start
 	ahs-edit-mode
+	align-cljlet
 	backward-delete-char
+	backward-kill-sentence
 	beginning-of-buffer
 	browse-kill-ring
+	c-electric-delete-forward
+	c-electric-paren
+	c-electric-slash
+	c-electric-star
+	c-indent-line-or-region
 	cider-eval-defun-at-point
 	cider-eval-last-sexp
 	cider-eval-last-sexp-and-replace
@@ -31,9 +39,12 @@
 	helm-maybe-exit-minibuffer
 	helm-show-kill-ring
 	hs-toggle-hiding
+	hydra-refactor/cljr-extract-function
+	hydra-refactor/cljr-thread
 	indent-for-tab-command
 	kill-region
 	live-delete-whitespace-except-one
+	live-paredit-backward-kill-sexp
 	live-paredit-forward-kill-sexp
 	magit-discard-item
 	move-line-up
@@ -75,13 +86,22 @@
 
 (setq mc/cmds-to-run-once
       '(
+	c-electric-semi&comma
 	delete-indentation
 	evil-insert
 	evil-normal-state
+	evil-normal-state
 	fancy-narrow-to-defun
 	fancy-widen
-	evil-normal-state
+	geiser-compile-current-buffer
+	geiser-mode-switch-to-repl
+	hydra--negative-argument
+	hydra-refactor/cljr-move-to-let
+	hydra-refactor/nil
+	ido-find-file
 	markdown-exdent-or-delete
+	mc/insert-character
+	mc/mark-dwim
 	mc/mark-next-like-this-repeat
 	mc/mark-previous-like-this-repeat
 	mouse-buffer-menu
@@ -89,4 +109,6 @@
 	paredit-close-curly
 	previous-buffer
 	smex
+	synth-delete-other-windows
+	yaml-electric-backspace
 	))
