@@ -18,6 +18,7 @@
 	cider-eval-defun-at-point
 	cider-eval-last-sexp
 	cider-eval-last-sexp-and-replace
+	cider-pp
 	cljr-cycle-coll
 	cljr-raise-sexp
 	cljr-slash
@@ -26,6 +27,7 @@
 	cljr-thread
 	cljr-unwind
 	clojure-toggle-keyword-string
+	comint-delchar-or-maybe-eof
 	comment-dwim
 	cua-copy-region
 	cua-paste
@@ -36,6 +38,7 @@
 	eval-last-sexp
 	evil-forward-char
 	forward-sentence
+	haskell-mode-contextual-space
 	helm-maybe-exit-minibuffer
 	helm-show-kill-ring
 	hs-toggle-hiding
@@ -43,6 +46,7 @@
 	hydra-refactor/cljr-thread
 	indent-for-tab-command
 	kill-region
+	kill-region-or-backward
 	live-delete-whitespace-except-one
 	live-paredit-backward-kill-sexp
 	live-paredit-forward-kill-sexp
@@ -87,6 +91,9 @@
 (setq mc/cmds-to-run-once
       '(
 	c-electric-semi&comma
+	cider-jack-in
+	cider-load-buffer
+	cider-switch-to-repl-buffer
 	delete-indentation
 	evil-insert
 	evil-normal-state
@@ -95,8 +102,10 @@
 	fancy-widen
 	geiser-compile-current-buffer
 	geiser-mode-switch-to-repl
+	haskell-interactive-switch
 	hydra--negative-argument
 	hydra-refactor/cljr-move-to-let
+	hydra-refactor/cljr-remove-unused-requires
 	hydra-refactor/nil
 	ido-find-file
 	markdown-exdent-or-delete
@@ -106,8 +115,10 @@
 	mc/mark-previous-like-this-repeat
 	mouse-buffer-menu
 	mouse-drag-secondary
+	mouse-set-region
 	paredit-close-curly
 	previous-buffer
+	shell-command
 	smex
 	synth-delete-other-windows
 	yaml-electric-backspace

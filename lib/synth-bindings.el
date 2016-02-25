@@ -61,6 +61,7 @@
  ("C-c C-p" . eval-print-last-sexp)
  ("C-c C-r" . eval-region))
 
+;; Fast window selection
 (key-chord-define-global "1q" (lambda () (interactive) (window-number-select 1)))
 (key-chord-define-global "2w" (lambda () (interactive) (window-number-select 2)))
 (key-chord-define-global "3e" (lambda () (interactive) (window-number-select 3)))

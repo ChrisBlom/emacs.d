@@ -44,6 +44,11 @@ Also bind `class' to ((class color) (min-colors 89))."
 
      `(magit-section-title ((t (:bold nil :underline t :background ,(hsl 0.1 0.1 0.3)))))
 
+     `(magit-blame-heading ((t (:bold nil :underline nil :background ,(hsl 0.1 0.1 0.2)
+				      :foreground ,(hsl 0.1 0.5 0.5)
+				      :slant italic
+				      ))))
+
      ;`(magit-item-highlight ((t (:background ,(hsl 0.1 0.1 0.23)))))
 
 
@@ -53,6 +58,13 @@ Also bind `class' to ((class color) (min-colors 89))."
      `(minibuffer-prompt ((t (:foreground "#66D9EF"))))
      `(css-selector ((t (:foreground "#F92672"))))
      `(css-property ((t (:foreground "#66D9EF"))))
+
+     `(magit-diff-hunk-header ((t (:background ,(hsl 0.7 0.1 0.2) :underline nil))))
+     `(magit-item-highlight ((t (:background ,(hsl 0.7 0.1 0.2)
+				 :foreground ,(hsl 0.15 0.3 0.7)
+
+					     :underline nil))))
+     `(diff-changed ((t (:background ,(hsl 0.7 0.9 0.3)))))
      `(diff-added ((t (:foreground "#A6E22E" :weight bold))))
      `(diff-context ((t (:foreground ,synth-fg))))
      `(diff-file-header ((t (:foreground "#66D9EF" :background nil))))
@@ -73,7 +85,7 @@ Also bind `class' to ((class color) (min-colors 89))."
      `(sml/filename       ((t (:inherit sml/global :foreground ,(hsl 0.60 0.8 0.7) :weight bold))))
      ;; font lock faces
      `(font-lock-builtin-face ((t (:foreground ,(hsl 0.35 0.5 0.7)))))
-     `(font-lock-comment-face ((t (:foreground ,(hsl 0.45 0.05 0.45) :slant italic))))
+     `(font-lock-comment-face ((t (:foreground ,(hsl 0.45 0.05 0.55) :slant italic))))
      `(font-lock-comment-delimiter-face ((t (:foreground "#667477" :slant italic))))
      `(font-lock-constant-face ((t (:foreground ,(hsl 1.7 0.9 0.8)))))
      `(font-lock-string-face ((t (:foreground ,(hsl 0.15 0.7 0.8)))))

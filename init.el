@@ -835,6 +835,8 @@
 	       (cdr (or (magit-get-remote-branch)
 			(user-error "No remote branch"))))))
 
+    (bind-key "C-c g p" 'endless/visit-pull-request-url)
+
     (defun my/magit-display-buffer (buffer)
       (display-buffer
        buffer (if (and (derived-mode-p 'magit-mode)
@@ -858,6 +860,12 @@
   :ensure t
   :config
   (add-hook 'magit-mode-hook 'turn-on-magit-gitflow))
+
+
+;; (use-package magit-filenotify
+;;   :ensure t
+;;   :config
+;;   (remove-hook 'magit-mode-hook (lambda () (magit-filenotify-mode +1))))
 
 (use-package browse-at-remote
   :ensure t
@@ -988,7 +996,8 @@
 (use-package evil
   :ensure t
   :commands evil-mode
-  :init (bind-key "C-c w e" evil-mode)
+  :bind
+  (("C-c w e" . evil-mode))
   :config
   (progn
     (global-evil-leader-mode +1)
@@ -1077,11 +1086,11 @@
 
   :config
   (progn
-
     (put-clojure-indent 'time 2)
-    (put-clojure-indent 'assoc 'defun)
     (put-clojure-indent 'letk 1)
-    (put-clojure-indent 'fact 1)
+    (put-clojure-indent 'fact 'defun)
+    (put-clojure-indent 'facts 'defun)
+    (put-clojure-indent 'future-fact 'defun)
     ;(put-clojure-indent 'facts 'defun)
     ;; fontlock logic vars
     (font-lock-add-keywords
@@ -1115,8 +1124,6 @@
 	0
 	font-lock-warning-face)))
 
-
-    (setq clojure-defun-indents '(assoc))
 
     ;; invocations
     (font-lock-add-keywords 'clojure-mode
@@ -1193,7 +1200,9 @@
 		    (cider-eval-buffer)))
      ("C-c M-c" . cider-connect)
      ("C-x C-e" . no-cider)
+
      ("C-c C-p" . no-cider)
+     ("C-c C-z" . cider-connect)
      ("C-c C-3" . synth-toggle-clojure-ignore-next-form))
     ;; compjure route formatting
     (define-clojure-indent
@@ -1205,60 +1214,14 @@
       (HEAD 2)
       (ANY 2)
       (OPTIONS 2)
-      (context 2))
-    ;; refactoring
-    (use-package clj-refactor
-      :ensure t
-      :config
-      (progn
-	(use-package cljr-helm :ensure t)
-	;; (add-hook 'clj-refactor-mode-hook
-	;; 	  (lambda ()
-	;; 	    (add-hook before-save-hook
-	;; 		      (lambda ()
-	;; 			(when cider-mode
-	;; 			  (cljr-remove-unused-requires)
-	;; 			  (cljr-sort-ns)
-	;; 			  (cljr-clean-ns))))))
-
-	(setq cljr-magic-require-namespaces
-	      (-distinct (-concat cljr-magic-require-namespaces
-				  '(("component" . "com.stuartsierra.component")
-				    ("s" . "schema.core")
-				    ("z" . "clojure.zip")
-				    ("d" . "datomic.api")
-				    ("edn" . "clojure.edn")
-				    ("sh" . "clojure.java.shell")
-				    ("log" . "taoensso.timbre")))))
-	;; override to use my preferred format
-	(defun cljr--insert-in-ns (type)
-	  (cljr--goto-ns)
-	  (if (cljr--search-forward-within-sexp (concat "(" type))
-	      (if (looking-at " *)")
-		  (progn
-		    (search-backward "(")
-		    (forward-list 1)
-		    (forward-char -1)
-		    (insert "\n")) ;; <- newline instead of space
-		(search-backward "(")
-		(forward-list 1)
-		(forward-char -1)
-		(newline-and-indent))
-	    (forward-list 1)
-	    (forward-char -1)
-	    (newline-and-indent)
-	    (insert "(" type " )")
-	    (forward-char -1)))
-	 (bind-keys
-	  :map clj-refactor-map
-	  ("C-'" . hydra-refactor/body))
-	(cljr-add-keybindings-with-modifier "C-s-")))))
+      (context 2))))
 
 (defhydra
   hydra-refactor (:color pink)
   ("t" cljr-thread "thread")
   ("f" cljr-thread-first-all "thread-first-all")
   ("l" cljr-thread-last-all "thread-last-all")
+  ("c" cljr-clean-ns "clean-ns")
   ("u" cljr-unwind-all "unwind")
   ("U" cljr-unwind-all "unwind-all")
   ("l" cljr-move-to-let "to-let")
@@ -1277,7 +1240,7 @@
   :ensure t)
 
 (use-package cider
-  :pin melpa-stable
+;  :pin melpa-stable
   :ensure t
   :commands (cider-jack-in cider-mode)
   :init
@@ -1314,12 +1277,15 @@
     (add-hook 'cider-repl-mode-hook
 	      (lambda ()
 		(cider-turn-on-eldoc-mode)
-		(paredit-mode 1)))
+		;(paredit-mode 1)
+		))
     (add-hook 'cider-mode-hook
 	      (lambda ()
 		(cider-turn-on-eldoc-mode)
-		(paredit-mode 1)))
+;		(paredit-mode 1)
+		))
     (setq cider-prefer-local-resources t
+	  cider-mode-line-show-connection nil
 	  cider-popup-stacktraces nil
 	  cider-popup-stacktraces-in-repl nil
 	  cider-show-error-buffer t
@@ -1414,6 +1380,10 @@ If invoked with a PREFIX argument, print the result in the current buffer."
       (interactive)
       (cider-interactive-eval "(js/console.clear)"))
 
+    (defun my/cider-require-symbol ()
+      (interactive)
+      (cider-interactive-eval (format "(let [x (symbol (namespace '%s))] (require x) [:required x])" (cider-symbol-at-point))))
+
 
     (defun cider-clear-repl ()
       "clear the relevant REPL buffer"
@@ -1434,13 +1404,16 @@ If invoked with a PREFIX argument, print the result in the current buffer."
      ("C-x M-r"   . cider-eval-last-sexp-to-repl)
      ("C-x C-k"   . cider-eval-buffer)
      ("C-x M-h"   . cider-eval-to-point)
+     ("C-c t d"   . cider-test-run-test)
      ("C-c t t"   . cider-test-run-tests)
+     ("C-c r r"   . my/cider-require-symbol)
      ("C-c C-j"   . cider-jack-in)
      ("C-c C-q"   . cider-quit)
-     ("C-c r c"   . cider-rotate-connection)
+     ("C-c r c"   . cider-rotate-default-connreection)
      ("C-c p-p"   . nil) ;; conflict with projectile
      ("C-c C-o"   . cider-clear-repl)
 					;("C-c C-p"   . cider-pprint-eval-last-sexp)
+     ("C-c d"     . cider-debug-defun-at-point)
      ("C-c C-p"   . cider-pp)
      )
 
@@ -1506,7 +1479,57 @@ If invoked with a PREFIX argument, print the result in the current buffer."
      :map clojure-mode-map
      ("C-c c f" . cider-figwheel-repl))))
 
+
 (use-package cider-eval-sexp-fu)
+
+;; refactoring
+(use-package clj-refactor
+  :ensure t
+  :config
+  (progn
+    (use-package cljr-helm :ensure t)
+    ;; (add-hook 'clj-refactor-mode-hook
+    ;; 	  (lambda ()
+    ;; 	    (add-hook before-save-hook
+    ;; 		      (lambda ()
+    ;; 			(when cider-mode
+    ;; 			  (cljr-remove-unused-requires)
+    ;; 			  (cljr-sort-ns)
+    ;; 			  (cljr-clean-ns))))))
+
+    (setq cljr-magic-require-namespaces
+	  (-distinct (-concat cljr-magic-require-namespaces
+			      '(("component" . "com.stuartsierra.component")
+				("s" . "schema.core")
+				("z" . "clojure.zip")
+				("d" . "datomic.api")
+				("edn" . "clojure.edn")
+				("a" . "clojure.core.async")
+				("sh" . "clojure.java.shell")
+				("log" . "taoensso.timbre")))))
+    ;; override to use my preferred format
+    (defun cljr--insert-in-ns (type)
+      (cljr--goto-ns)
+      (if (cljr--search-forward-within-sexp (concat "(" type))
+	  (if (looking-at " *)")
+	      (progn
+		(search-backward "(")
+		(forward-list 1)
+		(forward-char -1)
+		(insert "\n")) ;; <- newline instead of space
+	    (search-backward "(")
+	    (forward-list 1)
+	    (forward-char -1)
+	    (newline-and-indent))
+	(forward-list 1)
+	(forward-char -1)
+	(newline-and-indent)
+	(insert "(" type " )")
+	(forward-char -1)))
+    (bind-keys
+     :map clj-refactor-map
+     ("C-'" . hydra-refactor/body))
+    (cljr-add-keybindings-with-modifier "C-s-")))
 
 (defun my/cider-pprint-eval-last-sexp ()
   "Evaluate the sexp preceding point and pprint its value in a popup buffer."
@@ -1767,7 +1790,41 @@ If invoked with a PREFIX argument, print the result in the current buffer."
 
 (use-package travis :ensure t)
 
-(use-package haskell-mode :ensure t)
+(use-package haskell-mode
+  :ensure t
+  :config
+  (progn
+    (custom-set-variables
+     '(haskell-process-suggest-remove-import-lines t)
+     '(haskell-process-auto-import-loaded-modules t)
+     '(haskell-process-log t)
+     '(haskell-interactive-popup-error)
+     )
+
+
+
+    (bind-keys
+     :map haskell-mode-map
+     ("C-c C-l" . haskell-process-load-or-reload)
+     ("C-c C-j"     . haskell-interactive-bring)
+     ("C-c C-t" . haskell-process-do-type)
+     ("C-c C-i" . haskell-process-do-info)
+     ("C-c C-c" . haskell-process-cabal-build)
+     ("C-c C-o" . haskell-interactive-mode-clear)
+     ("C-c C-k" . haskell-process-load-or-reload)
+     ("C-c C-z" . haskell-interactive-switch)
+     ("C-c c"   . haskell-process-cabal)
+     ("SPC"     . haskell-mode-contextual-space))
+
+    (add-hook 'haskell-mode-hook
+	      (lambda ()
+		(bind-keys
+		 :map interactive-haskell-mode-map
+		 ("C-c C-z" . haskell-interactive-switch-back)))))
+
+
+
+  )
 
 (defun column (point)
   (save-excursion (goto-char point) (current-column)))
@@ -1793,12 +1850,8 @@ If invoked with a PREFIX argument, print the result in the current buffer."
   (message (format "%s" mc--min-col))
   (mc/execute-command-for-all-cursors (align-to mc--min-col)))
 
-
-
 (use-package synth-alias)
 (use-package synth-bindings)
-
-(use-package emamux)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Post init
@@ -1859,12 +1912,7 @@ If invoked with a PREFIX argument, print the result in the current buffer."
     (kill-region (point-min)
 		 (point-max))
     (read-only-mode +1)))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
+
 
 (use-package multifiles
   :ensure t

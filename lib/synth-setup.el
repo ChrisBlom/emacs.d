@@ -85,5 +85,12 @@
 
 (setq initial-scratch-message ";; Loaded emacs")
 
+(setq dired-dwim-target t)
+
+;; highlight current line
+(global-hl-line-mode +1)
+
+
+
 ;;
 (defalias 'yes-or-no-p 'y-or-n-p)
