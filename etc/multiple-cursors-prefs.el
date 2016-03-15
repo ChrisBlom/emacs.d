@@ -62,6 +62,7 @@
 	paredit-backslash
 	paredit-backward-kill-word
 	paredit-backward-slurp-sexp
+	paredit-backward-up
 	paredit-close-round
 	paredit-close-square
 	paredit-comment-dwim
@@ -104,6 +105,7 @@
 	geiser-mode-switch-to-repl
 	haskell-interactive-switch
 	hydra--negative-argument
+	hydra-refactor/cljr-clean-ns
 	hydra-refactor/cljr-move-to-let
 	hydra-refactor/cljr-remove-unused-requires
 	hydra-refactor/nil
@@ -118,6 +120,7 @@
 	mouse-set-region
 	paredit-close-curly
 	previous-buffer
+	projectile-toggle-between-implementation-and-test
 	shell-command
 	smex
 	synth-delete-other-windows
