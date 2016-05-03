@@ -8,6 +8,7 @@
 	align-cljlet
 	backward-delete-char
 	backward-kill-sentence
+	backward-sexp
 	beginning-of-buffer
 	browse-kill-ring
 	c-electric-delete-forward
@@ -44,11 +45,13 @@
 	hs-toggle-hiding
 	hydra-refactor/cljr-extract-function
 	hydra-refactor/cljr-thread
+	hydra-refactor/cljr-thread-first-all
 	indent-for-tab-command
 	kill-region
 	kill-region-or-backward
 	live-delete-whitespace-except-one
 	live-paredit-backward-kill-sexp
+	live-paredit-forward-down
 	live-paredit-forward-kill-sexp
 	magit-discard-item
 	move-line-up
@@ -118,7 +121,9 @@
 	mouse-buffer-menu
 	mouse-drag-secondary
 	mouse-set-region
+	next-buffer
 	paredit-close-curly
+	persp-prev
 	previous-buffer
 	projectile-toggle-between-implementation-and-test
 	shell-command
