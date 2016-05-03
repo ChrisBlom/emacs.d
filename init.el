@@ -833,15 +833,13 @@
   :bind (("C-x m" . magit-status)
 	 ("C-c g b" . magit-blame)
 	 ("C-c g s" . magit-branch-popup)
-	 ("C-c g p" . endless/visit-pull-request-url))
+	 ("C-c g v" . my/magit-visit-pull-request-url))
   :config
   (progn
     (setq magit-completing-read-function 'magit-ido-completing-read)
-
     (remove-hook 'pre-command-hook #'magit-pre-command-hook)
 
-
-    (defun endless/visit-pull-request-url ()
+    (defun my/magit-visit-pull-request-url ()
       "Visit the current branch's PR on Github."
       (interactive)
       (browse-url
@@ -851,10 +849,11 @@
 		(magit-get "remote"
 			   (magit-get-remote)
 			   "url"))
-	       (cdr (or (magit-get-remote-branch)
-			(user-error "No remote branch"))))))
+	       (or (magit-get-push-branch)
+		   (user-error "No remote branch")))))
 
-    (bind-key "C-c g p" 'endless/visit-pull-request-url)
+
+    (define-key magit-mode-map "v" #'my/magit-visit-pull-request-url)
 
     (defun my/magit-display-buffer (buffer)
       (display-buffer
@@ -871,9 +870,7 @@
 
     (setq magit-display-buffer-function 'my/magit-display-buffer))
 
-
-  (define-key magit-mode-map "v"
-    #'endless/visit-pull-request-url))
+)
 
 (use-package magit-gitflow
   :ensure t
@@ -889,7 +886,7 @@
 (use-package browse-at-remote
   :ensure t
   :commands browse-at-remote
-  :init (bind-key "C-c g r" 'browse-at-remote))
+  :init (bind-key "C-c g r" 'browse-at-remote/browse))
 
 (use-package git-timemachine
   :ensure t
