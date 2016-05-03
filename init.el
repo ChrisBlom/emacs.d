@@ -209,6 +209,15 @@
   (("M-]" . er/expand-region)
    ("M-[" . er/contract-region)))
 
+
+(require 'saveplace)
+(use-package saveplace
+  :config
+  (setq save-place-file (f-join user-emacs-directory "var" "places"))
+  ;; activate it for all buffers
+  (setq-default save-place t))
+
+
 (defvar mc--insert-character-char ?a)
 
 (defun mc--insert-character-and-increase ()
@@ -222,6 +231,8 @@
   (setq mc--insert-character-char (or arg ?a))
   (mc/for-each-cursor-ordered
    (mc/execute-command-for-fake-cursor #'mc--insert-character-and-increase cursor)))
+
+
 
 
 (use-package multiple-cursors
@@ -248,7 +259,7 @@
 	  (mc/edit-beginnings-of-lines)
 	(mc/mark-all-like-this-dwim arg)))
 
-    (key-chord-define global-map (kbd "[]") #'mc/mark-dwim)))
+    (key-chord-define global-map "[]" #'mc/mark-all-like-this-dwim)))
 
 (use-package change-inner
   :ensure t
@@ -292,8 +303,8 @@
     (bind-keys
      :map paredit-mode-map
      ("M-h"       . live-paredit-backward-kill-sexp)
-     ("M-p"       . backward-sexp)
-     ("M-n"       . synth-paredit-forward-down)
+     ("M-p"       . backward-paragraph)
+     ("M-n"       . forward-paragraph)
      ("M-<left>"  . backward-word)
      ("M-<right>" . forward-word)
      ("s-<left>"  . backward-sexp)
@@ -366,6 +377,10 @@
     (setq projectile-mode-line-lighter "ⓟ")
     (setq projectile-mode-line "ⓟ") ;; smart modeline already shows the current projectile project
     (setq projectile-completion-system 'ido)
+
+    (bind-keys :map projectile-command-map
+     ("r" .   projectile-replace))
+
     (key-chord-define projectile-mode-map "jk" #'projectile-switch-project)
     (key-chord-define projectile-mode-map "df" #'projectile-find-file-dwim)
     (key-chord-define projectile-mode-map "pt" #'projectile-toggle-between-implementation-and-test)))
@@ -415,7 +430,6 @@
     (bind-keys
      :map projectile-command-map
      ("f" .   helm-projectile-find-file-dwim)
-     ("r" .   helm-projectile-recentf)
      ("s s" . helm-projectile-ag)
      ("s g" . helm-projectile-grep)
      ("s a" . helm-projectile-ack))))
@@ -430,34 +444,35 @@
   :diminish "Ⓒ "
   :config
   (progn
-    (setq company-minimum-prefix-length 1
-	  company-idle-delay 0.01
+    (setq company-minimum-prefix-length 2
+	  company-idle-delay 0.3
 	  company-selection-wrap-around t
-	  company-async-timeout 0.5
+	  company-async-timeout 0.05
+	  company-async-timeout 2
 	  company-auto-complete-chars '(?\ ?\) ?. ?/)
 	  ;; select using super+number
 	  company-show-numbers t
 	  company-tooltip-align-annotations t
 	  ;; dont downcase completions
 	  company-dabbrev-downcase nil
-
-	  company-backends '(company-bbdb
-			     company-nxml
-			     company-css
-			     company-eclim
-			     company-semantic
-			     company-clang
-			     company-xcode
-			     company-cmake
-			     (company-capf company-dabbrev-code)
-;			     (company-dabbrev-code company-gtags company-etags company-keywords)
-			     company-oddmuse
-			     company-files
-			     company-yasnippet
-			     company-dabbrev-code
-			     company-dabbrev
-			     )
-	  company-transformers '(company-sort-by-occurrence my/company-transformer company-sort-by-backend-importance))
+	  ;; company-backends '(company-bbdb
+;; 			     company-nxml
+;; 			     company-css
+;; 			     company-eclim
+;; 			     company-semantic
+;; 			     company-clang
+;; 			     company-xcode
+;; 			     company-cmake
+;; 			     (company-capf company-dabbrev-code)
+;; ;			     (company-dabbrev-code company-gtags company-etags company-keywords)
+;; 			     company-oddmuse
+;; 			     company-files
+;; 			     company-yasnippet
+;; 			     company-dabbrev-code
+;; 			     company-dabbrev
+;; 			     )
+;	  company-transformers '(company-sort-by-occurrence my/company-transformer company-sort-by-backend-importance)
+	  )
 
     (global-company-mode +1)
 
@@ -716,7 +731,9 @@
 
 
 (defun geiser-syntax--extra-keywords ()
-  `((,(format "[[(]%s\\>" (regexp-opt '("#f" "#t" "box" "unbox" "doto") 1)) . 1)))
+  `((,(format "[[(]%s\\>" (regexp-opt '("#f" "#t" "box" "unbox" "doto"
+					"define-external"
+					) 1)) . 1)))
 
 (defun geiser-syntax--keywords ()
   (append
@@ -739,6 +756,8 @@
       (save-buffer)
       (geiser-load-current-buffer))
 
+    (geiser-syntax--keywords)
+
     (setq geiser-active-implementations '(chicken racket)
 	  geiser-debug-jump-to-debug-p nil ; don't jump to error buffer
 	  geiser-debug-show-debug-p nil ; don't jump to error buffer
@@ -759,9 +778,9 @@
 				   ("C-c C-j" . run-chicken)
 				   ("C-c m b" . geiser-load-current-buffer)
 				   ("C-c C-c" . geiser-repl-interrupt)
+				   ("C-c M-c" . geiser-connect)
 				   ("C-c C-n" . my/geiser-eval-imports)
-				   ("C-x M-h" . my/geiser-eval-to-point))
-				  ))
+				   ("C-x M-h" . my/geiser-eval-to-point))))
 
     (push '("lambda"  . ?λ) prettify-symbols-alist)))
 
@@ -1087,8 +1106,10 @@
   :config
   (progn
     (put-clojure-indent 'time 2)
+    (put-clojure-indent 'section 'defun)
     (put-clojure-indent 'letk 1)
     (put-clojure-indent 'fact 'defun)
+    (put-clojure-indent 'assoc 'defun)
     (put-clojure-indent 'facts 'defun)
     (put-clojure-indent 'future-fact 'defun)
     ;(put-clojure-indent 'facts 'defun)
@@ -1240,7 +1261,7 @@
   :ensure t)
 
 (use-package cider
-;  :pin melpa-stable
+  :pin melpa-stable
   :ensure t
   :commands (cider-jack-in cider-mode)
   :init
@@ -1376,6 +1397,24 @@ If invoked with a PREFIX argument, print the result in the current buffer."
       (cider-interactive-eval
        "(js/location.reload)"))
 
+    (defun my/cider-midje-load-facts ()
+      (interactive)
+      (cider-interactive-eval
+       "(require 'midje.repl)
+        (midje.repl/load-facts *ns*)"))
+
+    (defun my/cider-midje-autotest-start ()
+      (interactive)
+      (cider-interactive-eval
+       "(do (require 'midje.repl)
+            (midje.repl/autotest :all))"))
+
+    (defun my/cider-midje-autotest-stop ()
+      (interactive)
+      (cider-interactive-eval
+       "(do (require 'midje.repl)
+            (midje.repl/autotest :stop))"))
+
     (defun my/cider-cljs-clear ()
       (interactive)
       (cider-interactive-eval "(js/console.clear)"))
@@ -1385,11 +1424,29 @@ If invoked with a PREFIX argument, print the result in the current buffer."
       (cider-interactive-eval (format "(let [x (symbol (namespace '%s))] (require x) [:required x])" (cider-symbol-at-point))))
 
 
-    (defun cider-clear-repl ()
+    (defun my/cider-throw-last-exception ()
+      (interactive)
+      (cider-interactive-eval "(throw *e)"))
+
+
+    (defun my/cider-source ()
+      (interactive)
+      (message "Source: %s" (cider-interactive-eval (format "(clojure.repl/source %s)" (cider-symbol-at-point)))))
+
+    (defun my/cider-repl-clear-buffer ()
+      "clear the relevant REPL buffer"
+      (interactive)
+      (let ((pm paredit-mode))
+	(cider-repl-clear-buffer)
+	(paredit-mode pm)))
+
+    (defun my/cider-clear-repl ()
       "clear the relevant REPL buffer"
       (interactive)
       (cider-switch-to-repl-buffer)
-      (cider-repl-clear-buffer)
+      (let ((pm paredit-mode))
+	(cider-repl-clear-buffer)
+	(paredit-mode pm))
       (cider-switch-to-last-clojure-buffer))
 
     (defun cider-eval-buffer-and-set-ns ()
@@ -1405,26 +1462,33 @@ If invoked with a PREFIX argument, print the result in the current buffer."
      ("C-x C-k"   . cider-eval-buffer)
      ("C-x M-h"   . cider-eval-to-point)
      ("C-c t d"   . cider-test-run-test)
-     ("C-c t t"   . cider-test-run-tests)
+     ("C-c t t"   . cider-test-run-test)
+     ("C-c t n"   . cider-test-run-ns-tests)
      ("C-c r r"   . my/cider-require-symbol)
      ("C-c C-j"   . cider-jack-in)
      ("C-c C-q"   . cider-quit)
-     ("C-c r c"   . cider-rotate-default-connreection)
+     ("C-c r c"   . cider-connection-browser)
      ("C-c p-p"   . nil) ;; conflict with projectile
-     ("C-c C-o"   . cider-clear-repl)
+     ("C-c C-o"   . my/cider-clear-repl)
 					;("C-c C-p"   . cider-pprint-eval-last-sexp)
      ("C-c d"     . cider-debug-defun-at-point)
      ("C-c C-p"   . cider-pp)
-     )
+     ("C-c e"   .   my/cider-throw-last-exception)
+     ("C-c s"   .   my/cider-source)
+     ("C-c t m"   .   my/cider-midje-load-facts)
+
+     ("C-c t <up>"   .   my/cider-midje-autotest-start)
+     ("C-c t <down>"   .   my/cider-midje-autotest-stop)
+
+     ("C-c m l" . my/cider-midje-load-facts))
 
     (bind-keys
      :map clojure-mode-map
      ("C->"     . cljr-cycle-coll)
-     ("s-;"     . clojure-toggle-keyword-string)
+     ("s-;"     . my/clojure-toggle-keyword-string)
      ("C-c C-j" . cider-jack-in)
      ("C-,"     . cljr-unwind)
      ("C-."     . cljr-thread)
-     ("C-`"       . cider-clear-and-eval-defun-at-point)
      ("<f19>"     . cider-eval-last-sexp) ;; as C-x C-e
      ("s-p s-p"   . cider-pp))
 
@@ -1506,7 +1570,9 @@ If invoked with a PREFIX argument, print the result in the current buffer."
 				("edn" . "clojure.edn")
 				("a" . "clojure.core.async")
 				("sh" . "clojure.java.shell")
-				("log" . "taoensso.timbre")))))
+				("log" . "taoensso.timbre")
+				("json" . "cheshire.core")
+				("p" . "plumbing.core")))))
     ;; override to use my preferred format
     (defun cljr--insert-in-ns (type)
       (cljr--goto-ns)
@@ -1529,6 +1595,24 @@ If invoked with a PREFIX argument, print the result in the current buffer."
     (bind-keys
      :map clj-refactor-map
      ("C-'" . hydra-refactor/body))
+
+    (bind-keys
+     :map clj-refactor-map
+     :prefix "C-c r"
+     :prefix-map cljr
+     ("m"   . cljr-move-to-let)
+     ("l"   . cljr-introduce-let)
+     ("e f" . cljr-extract-function)
+     ("e d" . cljr-extract-def)
+     ("e c" . cljr-extract-constant)
+     ("t"   . cljr-thread)
+     ("u"   . cljr-unwind)
+     ("n s" . cljr-sort-ns)
+     ("n c" . cljr-clean-ns)
+     ("s"   . cljr-rename-symbol)
+     ("r"   . cljr-add-require-to-ns)
+     ("i"   . cljr-add-import-to-ns))
+
     (cljr-add-keybindings-with-modifier "C-s-")))
 
 (defun my/cider-pprint-eval-last-sexp ()
@@ -1914,14 +1998,45 @@ If invoked with a PREFIX argument, print the result in the current buffer."
     (read-only-mode +1)))
 
 
-(use-package multifiles
-  :ensure t
+
+(autoload 'cider--make-result-overlay "cider-overlays")
+
+(defun endless/eval-overlay (value point)
+  (cider--make-result-overlay (format "%S" value)
+    :where point
+    :duration 'command)
+  ;; Preserve the return value.
+  value)
+
+;; (advice-add 'eval-region :around
+;;             (lambda (f beg end &rest r)
+;;               (endless/eval-overlay
+;;                (apply f beg end r)
+;;                end)))
+
+;; (advice-add 'eval-last-sexp :filter-return
+;;             (lambda (r)
+;;               (endless/eval-overlay r (point))))
+
+;; (advice-add 'eval-defun :filter-return
+;;             (lambda (r)
+;;               (endless/eval-overlay
+;;                r
+;;                (save-excursion
+;;                  (end-of-defun)
+;;                  (point)))))
+
+
+
+(use-package flycheck-tip
+
   :config
-  ;; override: dont ask just save
-  (defun mf/save-original-buffers ()
-    (interactive)
-    (--each (mf--original-buffers)
-      (with-current-buffer it
-	(when buffer-file-name
-	  (save-buffer)))))
+  (progn
+    (setq flycheck-display-errors-function #'flycheck-pos-tip-error-messages)
+    (flycheck-pos-tip-mode 1)
+
+
+    )
+
+
   )
