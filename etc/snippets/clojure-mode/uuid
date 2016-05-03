@@ -1,0 +1,6 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: uuid
+# key: uuid
+# binding: direct-keybinding
+# --
+(java.util.UUID/randomUUID)

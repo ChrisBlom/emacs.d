@@ -1,0 +1,13 @@
+#name: Lifecycle
+# --
+(component/Lifecycle
+ (start [{:keys [${1:key} in] :as this}]
+        (if $key
+          this
+          (let [${val:expr}]
+            (assoc this $key $val))))
+ (stop [{:keys [$key] :as this}]
+       (if $key
+         (do
+           (dissoc this $key)))
+       this))

@@ -1,0 +1,10 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: dq
+# key: dq
+# binding: direct-keybinding
+# --
+(d/q '[:find ?$2
+       :in $
+       :where
+       [?$2 :$3 $4]]
+     ${1:(d/db c)})

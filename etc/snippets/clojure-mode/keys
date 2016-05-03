@@ -1,0 +1,6 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: keys
+# key: keys
+# binding: direct-keybinding
+# --
+{:keys [$1] :as $2}

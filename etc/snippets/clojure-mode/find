@@ -1,0 +1,6 @@
+#name: find
+# --
+(d/q '[:find $2
+       :where
+       [$3]]
+      $3)

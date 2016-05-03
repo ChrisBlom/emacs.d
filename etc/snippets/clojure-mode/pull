@@ -1,0 +1,6 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: pull
+# key: pull
+# binding: direct-keybinding
+# --
+(d/pull db $1 $2)
