@@ -209,14 +209,10 @@
   (("M-]" . er/expand-region)
    ("M-[" . er/contract-region)))
 
-
-(require 'saveplace)
 (use-package saveplace
+  :init  (setq-default save-place t)
   :config
-  (setq save-place-file (f-join user-emacs-directory "var" "places"))
-  ;; activate it for all buffers
-  (setq-default save-place t))
-
+  (setq save-place-file (f-join user-emacs-directory "var" "places")))
 
 (defvar mc--insert-character-char ?a)
 
@@ -250,16 +246,7 @@
    ("C-c m a" . mc/insert-character)
    ("C-c m i" . mc/insert-numbers))
   :config
-  (progn
-    (defun mc/mark-dwim (arg)
-      (interactive "P")
-      (if (and (region-active-p)
-	       (not (eq (line-number-at-pos (region-beginning))
-			(line-number-at-pos (region-end)))))
-	  (mc/edit-beginnings-of-lines)
-	(mc/mark-all-like-this-dwim arg)))
-
-    (key-chord-define global-map "[]" #'mc/mark-all-like-this-dwim)))
+  (key-chord-define global-map "[]" #'mc/mark-all-like-this-dwim))
 
 (use-package change-inner
   :ensure t
@@ -311,6 +298,13 @@
      ("s-<right>" . live-paredit-forward-down)
      ("C-)"       . paredit-forward-slurp-sexp)
      ("C-("       . paredit-backward-slurp-sexp)
+
+     ("M-("       . paredit-forward-barf-sexp)
+     ("M-)"       . paredit-backward-barf-sexp)
+
+     ("s-("       . paredit-forward)
+     ("s-)"       . paredit-backward)
+
      ("C-c l l"   . align-cljlet)
      ("C-c p"     . nil)
      ("C-c l k"   . paredit-splice-sexp-killing-forward)
@@ -328,12 +322,8 @@
      ("C-M-f"     . live-paredit-forward)
      ("M-q"       . live-paredit-reindent-defun)
      ("M-d"       . live-paredit-forward-kill-sexp)
-     ("M-k"       . live-paredit-backward-kill)
-     ("M-\\"      . live-paredit-delete-horizontal-space)
-     ("C-M-i"     . paredit-forward-down)
-     ("C-M-n"     . paredit-forward-up)
-     ("C-M-p"     . paredit-backward-down)
-     ("C-M-u"     . paredit-backward-up))))
+     ("M-k"       . live-paredit-backward-kill-s)
+     ("M-\\"      . live-paredit-delete-horizontal-space))))
 
 (use-package aggressive-indent
   :ensure t
@@ -824,6 +814,9 @@
      ("M-±"       . hs-toggle-hiding)
      ("<backtab>" . hs-toggle-hiding))))
 
+(use-package hideshow-fringe)
+
+(hideshow-fringe-enable)
 
 
 (use-package magit
@@ -1106,7 +1099,8 @@
     (put-clojure-indent 'section 'defun)
     (put-clojure-indent 'letk 1)
     (put-clojure-indent 'fact 'defun)
-    (put-clojure-indent 'assoc 'defun)
+    (put-clojure-indent 'assoc nil)
+    (put-clojure-indent 'match 'defun)
     (put-clojure-indent 'facts 'defun)
     (put-clojure-indent 'future-fact 'defun)
     ;(put-clojure-indent 'facts 'defun)
@@ -1257,6 +1251,24 @@
 (use-package clojure-snippets
   :ensure t)
 
+(defun my/display-image-inline (buffer-name file-name)
+  "Use `BUFFER-NAME' to display the image in `FILE-NAME'.
+  Checks weather `BUFFER-NAME' already exists, and if not create
+  as needed."
+  (save-excursion
+    (switch-to-buffer-other-window buffer-name)
+    (iimage-mode t)
+    (read-only-mode -1)
+    (kill-region (point-min) (point-max))
+    ;; unless we clear the cache, the same cached image will
+    ;; always get re-displayed.
+    (clear-image-cache nil)
+    (insert-image (create-image file-name))
+    (read-only-mode t)))
+
+(use-package image+
+  :ensure t)
+
 (use-package cider
   :pin melpa-stable
   :ensure t
@@ -1271,16 +1283,19 @@
 	      (aggressive-indent-mode -1)
 	      (yas-minor-mode -1)
 	      (turn-off-hideshow)
+	      (when (eq system-type 'windows-nt)
+		(live-windows-hide-eol))
 	      (undo-tree-mode -1)))
   (add-hook 'clojure-mode-hook
 	    (lambda ()
 	      (eldoc-mode +1)
 	      (paredit-mode +1)
-	      (aggressive-indent-mode +1)
+	      (aggressive-indent-mode -1)
 	      (auto-highlight-symbol-mode +1)
 	      (yas-minor-mode +1)
 	      (setq buffer-save-without-query t)
 	      (clj-refactor-mode +1)
+	      (company-mode +1)
 	      (push '(">=" . ?≥) prettify-symbols-alist)
 	      ;(push '(alpha . ?α) prettify-symbols-alist)
 	      ;(push '(beta . ?β) prettify-symbols-alist)
@@ -1290,22 +1305,26 @@
   :config
   (progn
     (require 'clojure-mode)
-    (when (eq system-type 'windows-nt)
-      (add-hook 'nrepl-mode-hook 'live-windows-hide-eol ))
+    (require 'company)
+    (require 'cider-utils)
+
     (add-hook 'cider-repl-mode-hook
 	      (lambda ()
-		(cider-turn-on-eldoc-mode)
+		;(cider-turn-on-eldoc-mode)
 		;(paredit-mode 1)
 		))
     (add-hook 'cider-mode-hook
 	      (lambda ()
-		(cider-turn-on-eldoc-mode)
+		;(cider-turn-on-eldoc-mode)
 ;		(paredit-mode 1)
 		))
+
     (setq cider-prefer-local-resources t
 	  cider-mode-line-show-connection nil
+
 	  cider-popup-stacktraces nil
 	  cider-popup-stacktraces-in-repl nil
+
 	  cider-show-error-buffer t
 	  cider-auto-select-error-buffer nil
 	  cider-auto-jump-to-error nil
@@ -1316,6 +1335,7 @@
 	  cider-lein-parameters "with-profile +power repl"
 	  cider-repl-wrap-history t
 	  cider-repl-use-clojure-font-lock nil
+	  cider-repl-display-help-banner nil
 	  nrepl-buffer-name-show-port t
 	  nrepl-log-messages nil
 	  nrepl-message-buffer-max-size 10000
@@ -1561,8 +1581,7 @@
 			:bold t
 			:background nil)
 
-    (setq hl-paren-delay 0.05)
-    ))
+    (setq hl-paren-delay 0.05)))
 
 (use-package highlight-blocks
   :commands highlight-blocks-mode
@@ -1580,11 +1599,7 @@
 		  faces))
 	  `(progn ,@faces))))
 
-    (highlight-blocks--define-faces))
-
-
-  )
-
+    (highlight-blocks--define-faces)))
 
 ;; Fontlocking for numbers
 (use-package highlight-numbers

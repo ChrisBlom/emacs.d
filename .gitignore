@@ -2,5 +2,9 @@ backups/
 tmp/
 elpa/
 packs/
-etc/snippets/
 auto-save-list/
+/helm-doc.org
+/etc/etags-regexps
+/.init.el.swp
+/eshell/
+/tramp
