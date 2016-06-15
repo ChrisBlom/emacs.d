@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: random
+# key: random
+# --
+(java.util.Random.)

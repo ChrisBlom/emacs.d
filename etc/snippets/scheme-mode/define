@@ -1,6 +1,7 @@
 # -*- mode: snippet; require-final-newline: nil -*-
-# name: keys
-# key: keys
+# name: define
+# key: def
 # binding: direct-keybinding
 # --
-{:keys [$1]}
+(define ($1)
+  $2)
