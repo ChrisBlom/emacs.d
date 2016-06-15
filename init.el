@@ -1322,162 +1322,38 @@
 	  nrepl-port "4555")
     ;; jump to repl buffer on connect cider-repl-pop-to-buffer-on-connect t
     (add-to-list 'same-window-buffer-names "*cider*")
-    (defun cider-clean-restart (&optional prompt-project)
-      "Quit CIDER, run `lein clean` and restart CIDER.
-If PROMPT-PROJECT is t, then prompt for the project in which to
-restart the server."
-      (interactive "P")
-      (cider-quit)
-      (message "Waiting for CIDER to quit...")
-      (sleep-for 2)
-      (message "Running lein clean...")
-      (let ((exit (shell-command "lein clean")))
-	(if (zerop exit) (cider-jack-in prompt-project)
-	  (message "Could not run lein clean"))))
-
-    ;; Enable company-mode
-    (require 'company)
-
-    (add-hook 'cider-mode-hook #'company-mode)
-
-    (defun cider-figwheel-repl ()
-      (interactive)
-      (save-some-buffers)
-      (with-current-buffer (cider-current-repl-buffer)
-	(goto-char (point-max))
-	(insert "(require 'figwheel-sidecar.repl-api)
-             (figwheel-sidecar.repl-api/cljs-repl)")
-	(cider-repl-return)))
-
-    (global-set-key (kbd "C-c C-f") 'cider-figwheel-repl)
-
-    (defun cider-clear-and-eval-defun-at-point ()
-      (interactive)
-      (cider-find-and-clear-repl-buffer)
-      (clear-message-buffer)
-      (cider-eval-defun-at-point))
-
-    (defun cider-eval-to-point ()
-      (interactive)
-      (cider-eval-region (point-min) (point)))
-
-       ;; (format "(let [res %s]
-       ;;          #?(:clj  (clojure.pprint/pprint res)
-       ;;             :cljs (with-out-str (cljs.pprint/pprint res)) )" (cider-last-sexp))
-
-    (defun cider-pp (&optional prefix)
-      "Evaluate the expression preceding point.
-If invoked with a PREFIX argument, print the result in the current buffer."
-      (interactive "P")
-;      (cider-pprint-eval-last-sexp)
-      (cider--pprint-eval-form
-       (format "(let [res %s]
-                   #?(:clj  (clojure.pprint/pprint res)
-                      :cljs (with-out-str (cljs.pprint/pprint res))))" (cider-last-sexp))))
-
-    (defun cider-pp-clj (&optional prefix)
-      "Evaluate the expression preceding point.
-If invoked with a PREFIX argument, print the result in the current buffer."
-      (interactive "P")
-;      (cider-pprint-eval-last-sexp)
-      (cider--pprint-eval-form
-       (format "(let [res %s] (clojure.pprint/pprint res) res)" (cider-last-sexp))))
-
-    (defun cider-set-validate ()
-      (interactive)
-      (cider-interactive-eval
-       "(do (require 'schema.core)
-        (schema.core/set-fn-validation! true))"))
-
-    (defun my/cider-cljs-refresh ()
-      (interactive)
-      (cider-interactive-eval
-       "(js/location.reload)"))
-
-    (defun my/cider-midje-load-facts ()
-      (interactive)
-      (cider-interactive-eval
-       "(require 'midje.repl)
-        (midje.repl/load-facts *ns*)"))
-
-    (defun my/cider-midje-autotest-start ()
-      (interactive)
-      (cider-interactive-eval
-       "(do (require 'midje.repl)
-            (midje.repl/autotest :all))"))
-
-    (defun my/cider-midje-autotest-stop ()
-      (interactive)
-      (cider-interactive-eval
-       "(do (require 'midje.repl)
-            (midje.repl/autotest :stop))"))
-
-    (defun my/cider-cljs-clear ()
-      (interactive)
-      (cider-interactive-eval "(js/console.clear)"))
-
-    (defun my/cider-require-symbol ()
-      (interactive)
-      (cider-interactive-eval (format "(let [x (symbol (namespace '%s))] (require x) [:required x])" (cider-symbol-at-point))))
-
-
-    (defun my/cider-throw-last-exception ()
-      (interactive)
-      (cider-interactive-eval "(throw *e)"))
-
-
-    (defun my/cider-source ()
-      (interactive)
-      (message "Source: %s" (cider-interactive-eval (format "(clojure.repl/source %s)" (cider-symbol-at-point)))))
-
-    (defun my/cider-repl-clear-buffer ()
-      "clear the relevant REPL buffer"
-      (interactive)
-      (let ((pm paredit-mode))
-	(cider-repl-clear-buffer)
-	(paredit-mode pm)))
-
-    (defun my/cider-clear-repl ()
-      "clear the relevant REPL buffer"
-      (interactive)
-      (cider-switch-to-repl-buffer)
-      (let ((pm paredit-mode))
-	(cider-repl-clear-buffer)
-	(paredit-mode pm))
-      (cider-switch-to-last-clojure-buffer))
-
-    (defun cider-eval-buffer-and-set-ns ()
-      (interactive)
-      (cider-eval-buffer)
-      (cider-repl-set-ns))
 
     (bind-keys
      :map cider-mode-map
+
      ("M-RET"     . cider-doc)
+     ("C-c s"   .   my/cider-source)
+
      ("C-x M-e"   . cider-eval-last-sexp-and-replace)
+     ("C-x c c"   . my/cider-eval-last-sexp-comment)
+     ("C-c ."     . my/cider-dot)
+     ("s-."       . cider-eval-expression-at-point)
      ("C-x M-r"   . cider-eval-last-sexp-to-repl)
      ("C-x C-k"   . cider-eval-buffer)
      ("C-x M-h"   . cider-eval-to-point)
-     ("C-c t d"   . cider-test-run-test)
-     ("C-c t t"   . cider-test-run-test)
-     ("C-c t n"   . cider-test-run-ns-tests)
      ("C-c r r"   . my/cider-require-symbol)
      ("C-c C-j"   . cider-jack-in)
      ("C-c C-q"   . cider-quit)
      ("C-c r c"   . cider-connection-browser)
      ("C-c p-p"   . nil) ;; conflict with projectile
      ("C-c C-o"   . my/cider-clear-repl)
-					;("C-c C-p"   . cider-pprint-eval-last-sexp)
-     ("C-c d"     . cider-debug-defun-at-point)
      ("C-c C-p"   . cider-pp)
+     ("C-c d"     . cider-debug-defun-at-point)
      ("C-c e"   .   my/cider-throw-last-exception)
-     ("C-c s"   .   my/cider-source)
+
+     ;; Testing
+     ("C-c t d"   . cider-test-run-test)
+     ("C-c t t"   . cider-test-run-test)
+     ("C-c t n"   . cider-test-run-ns-tests)
+     ("C-c w t"   . my/cider-show-impl-and-test)
      ("C-c t m"   .   my/cider-midje-load-facts)
-
      ("C-c t <up>"   .   my/cider-midje-autotest-start)
-     ("C-c t <down>"   .   my/cider-midje-autotest-stop)
-
-     ("C-c m l" . my/cider-midje-load-facts))
+     ("C-c t <down>"   .   my/cider-midje-autotest-stop))
 
     (bind-keys
      :map clojure-mode-map
