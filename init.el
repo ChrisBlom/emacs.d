@@ -1982,8 +1982,7 @@
 ;;     (setq flycheck-display-errors-function #'flycheck-pos-tip-error-messages)
 ;;     (flycheck-pos-tip-mode 1)))
 
-(use-package paradox :ensure t
-  :init (setq paradox-github-token "f8819f1b68cfcfe231a3bbce58a39303cbeeb35f"))
+(use-package paradox :ensure t)
 
 (defun my/dired-do-command (command)
   "Run COMMAND on marked files. Any files not already open will be opened.
