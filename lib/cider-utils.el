@@ -1,3 +1,5 @@
+(provide 'cider-utils)
+
 (defun my/cider-dot ()
   (interactive)
   (cider-interactive-eval (format "(spit \"/tmp/cider.dot\" %s)"
@@ -60,15 +62,13 @@ If invoked with a PREFIX argument, print the result in the current buffer."
   (cider--pprint-eval-form
    (format "(let [res %s] (clojure.pprint/pprint res) res)" (cider-last-sexp))))
 
-(defun my/cider-eval-last-sexp-comment (&optional prefix)
+(defun my/cider-eval-last-sexp-comment ()
   "Evaluate the expression preceding point.
 If invoked with a PREFIX argument, print the result in the current buffer."
-  (interactive "P")
-  (cider--pprint-eval-form
-   (replace-match
-    (s-replace "(comment"
-	       "(do"
-	       (cider-last-sexp)))))
+  (interactive)
+  (let* ((expr (cider-last-sexp))
+	 (do-expr (s-replace "(comment" "(do" expr)))
+    (cider-interactive-eval do-expr)))
 
 (defun cider-set-validate ()
   (interactive)
@@ -99,6 +99,12 @@ If invoked with a PREFIX argument, print the result in the current buffer."
    "(do (require 'midje.repl)
             (midje.repl/autotest :stop))"))
 
+(defun my/cider-midje-autotest-error ()
+  (interactive)
+  (cider-interactive-eval
+   "(do (require 'midje.repl)
+        (throw midje.repl/*me))"))
+
 (defun my/cider-cljs-clear ()
   (interactive)
   (cider-interactive-eval "(js/console.clear)"))
@@ -118,6 +124,10 @@ If invoked with a PREFIX argument, print the result in the current buffer."
   (interactive)
   (cider-interactive-eval (format "(let [x (symbol (namespace '%s))] (require x) [:required x])" (cider-symbol-at-point))))
 
+(defun my/cider-pull-dependency ()
+  (interactive)
+  (cider-interactive-eval (format "(./distill '%s)" (cider-last-sexp))))
+
 
 (defun my/cider-throw-last-exception ()
   (interactive)
@@ -127,6 +137,10 @@ If invoked with a PREFIX argument, print the result in the current buffer."
 (defun my/cider-source ()
   (interactive)
   (message "Source: %s" (cider-interactive-eval (format "(clojure.repl/source %s)" (cider-symbol-at-point)))))
+
+(defun my/cider-clear-namespace ()
+  (interactive)
+  (message "Cleared: %s" (cider-interactive-eval "(./clear-ns)")))
 
 (defun my/cider-repl-clear-buffer ()
   "clear the relevant REPL buffer"
@@ -143,6 +157,12 @@ If invoked with a PREFIX argument, print the result in the current buffer."
     (cider-repl-clear-buffer)
     (paredit-mode pm))
   (cider-switch-to-last-clojure-buffer))
+
+(defun my/cider-eval-buffer (&optional prefix)
+  "like cider eval buffer, but with a prefix it first clear the namespace"
+  (interactive "P")
+  (when prefix (my/cider-clear-namespace))
+  (cider-eval-buffer))
 
 (defun cider-eval-buffer-and-set-ns ()
   (interactive)

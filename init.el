@@ -7,10 +7,10 @@
     (package-install 'use-package))
 
 ;; only use use-package.el at compile-time
-(eval-when-compile
-  (require 'use-package))
-(require 'diminish)                ;; if you use :diminish
-(require 'bind-key)                ;; if you use any :bind variant
+(eval-when-compile (require 'use-package))
+
+(require 'diminish)
+(require 'bind-key)
 
 ; (package-refresh-contents)
 
@@ -221,9 +221,13 @@
   (insert (char-to-string mc--insert-character-char))
   (setq mc--insert-character-char (1+ mc--insert-character-char)))
 
-(defun mc/insert-character (arg)
-  "Insert increasing numbers for each cursor, starting at 0 or ARG."
-  (interactive "P")
+
+
+
+
+(defun mc/insert-characters (arg)
+  "Insert increasing characters for each cursor, starting at 'a'"
+  (interactive "Pc")
   (setq mc--insert-character-char (or arg ?a))
   (mc/for-each-cursor-ordered
    (mc/execute-command-for-fake-cursor #'mc--insert-character-and-increase cursor)))
@@ -236,17 +240,18 @@
   :init (setq mc/list-file (f-join user-emacs-directory "etc" "multiple-cursors-prefs.el"))
   :bind
   (("C-c m h" . mc-hide-unmatched-lines-mode)
-   ("C-c m a" . mc/mark-all-like-this-dwim)
+   ("C-c m a" . mc/mark-all-like-this)
    ("C-c m d" . mc/mark-all-symbols-like-this-in-defun)
    ("s-]" . mc/mark-next-like-this)
    ("s-[" . mc/mark-previous-like-this)
    ("s-{" . mc/unmark-previous-like-this)
    ("s-}" . mc/unmark-next-like-this)
    ("s-i" . mc/insert-numbers)
-   ("C-c m a" . mc/insert-character)
-   ("C-c m i" . mc/insert-numbers))
-  :config
-  (key-chord-define global-map "[]" #'mc/mark-all-like-this-dwim))
+   ("C-c m m" . mc/mark-all-like-this-dwim)
+   ("C-c m a" . mc/insert-characters)
+   ("C-c m i" . mc/insert-numbers)))
+
+(key-chord-define global-map "[]" #'mc/mark-all-like-this)
 
 (use-package change-inner
   :ensure t
@@ -769,6 +774,7 @@
 				   :map geiser-mode-map
 				   ("C-c C-j" . run-chicken)
 				   ("C-c m b" . geiser-load-current-buffer)
+				   ("C-<return>" . geiser-eval-definition)
 				   ("C-c C-c" . geiser-repl-interrupt)
 				   ("C-c M-c" . geiser-connect)
 				   ("C-c C-n" . my/geiser-eval-imports)
@@ -820,6 +826,13 @@
 
 (hideshow-fringe-enable)
 
+;;;; Git
+
+(defun gitx ()
+  (interactive)
+  (shell-command "gitx ."))
+
+(bind-key "C-c g x" 'gitx)
 
 (use-package magit
   :ensure t
@@ -828,27 +841,20 @@
   :bind (("C-x m" . magit-status)
 	 ("C-c g b" . magit-blame)
 	 ("C-c g s" . magit-branch-popup)
-	 ("C-c g v" . my/magit-visit-pull-request-url))
+	 ("C-c g v" . my/magit-visit-pull-request-url)
+	 ("C-c g 0" . my/magit-visit-circleci-url))
   :config
   (progn
-    (setq magit-completing-read-function 'magit-ido-completing-read)
+    (setq magit-completing-read-function 'magit-ido-completing-read
+	  magit-status-expand-stashes nil
+	  magit-status-show-hashes-in-headers 'magit-insert-head-branch-header)
+
     (remove-hook 'pre-command-hook #'magit-pre-command-hook)
 
-    (defun my/magit-visit-pull-request-url ()
-      "Visit the current branch's PR on Github."
-      (interactive)
-      (browse-url
-       (format "https://github.com/%s/pull/new/%s"
-	       (replace-regexp-in-string
-		"\\`.+github\\.com:\\(.+\\)\\.git\\'" "\\1"
-		(magit-get "remote"
-			   (magit-get-remote)
-			   "url"))
-	       (or (magit-get-push-branch)
-		   (user-error "No remote branch")))))
-
-
     (define-key magit-mode-map "v" #'my/magit-visit-pull-request-url)
+    (define-key magit-mode-map "§" #'gitx)
+    (define-key magit-mode-map "`" #'gitx)
+    (define-key magit-mode-map "0" #'my/magit-visit-circleci-url)
 
     (defun my/magit-display-buffer (buffer)
       (display-buffer
@@ -858,35 +864,21 @@
                                 magit-stash-mode
                                 magit-revision-mode
                                 magit-diff-mode
-                                magit-status-mode
-				))))
+                                magit-status-mode))))
               '(display-buffer-same-window)
 	      nil)))
 
-    (setq magit-display-buffer-function 'my/magit-display-buffer))
-
-)
-
-(use-package magit-gitflow
-  :ensure t
-  :config
-  (add-hook 'magit-mode-hook 'turn-on-magit-gitflow))
-
-
-;; (use-package magit-filenotify
-;;   :ensure t
-;;   :config
-;;   (remove-hook 'magit-mode-hook (lambda () (magit-filenotify-mode +1))))
+    (setq magit-display-buffer-function 'my/magit-display-buffer)))
 
 (use-package browse-at-remote
   :ensure t
   :commands browse-at-remote
-  :init (bind-key "C-c g r" 'browse-at-remote/browse))
+  :bind (("C-c g r" . browse-at-remote)))
 
 (use-package git-timemachine
   :ensure t
   :commands git-timemachine
-  :init (bind-key "C-c g t" 'git-timemachine))
+  :bind (("C-c g t" . git-timemachine)))
 
 (use-package ediff
   :config
@@ -914,7 +906,18 @@
 
 (use-package flycheck
   :ensure t
-  :commands flycheck-mode)
+  :commands flycheck-mode
+  :bind
+  (("C-c c t"     . flycheck-mode))
+  :config
+  ;(global-flycheck-mode)
+  (bind-keys
+   :map flycheck-mode-map
+   ("C-c c c"     . flycheck-buffer)
+   ("C-c c o"     . flycheck-clear)
+   ("C-c c l"     . flycheck-list-errors)
+   ("C-c c n"     . flycheck-next-error)
+   ("C-c c p"     . flycheck-previous-error)))
 
 (use-package evil-leader
   :ensure t
@@ -1030,8 +1033,6 @@
     (bind-keys
      :map org-mode-map
      ("M-." . org-open-at-point))))
-
-(color-theme-synth)
 
 (defface clojure-ns-face
   '((t (:inherit default :bold nil)))
@@ -1149,7 +1150,7 @@
     ;; anywhere
     (font-lock-add-keywords 'clojure-mode
 			    `((,(concat "\\<"
-					(regexp-opt '("=>" "=not=>" "=contains=>") t)
+					(regexp-opt '("=>" "=not=>" "=contains=>" "run!") t)
 					"\\>")
 			       1 font-lock-builtin-face)))
 
@@ -1202,7 +1203,7 @@
 	(if (char-equal ?_  (preceding-char))
 	    (delete-backward-char 2)
 	  (insert-string "#_"))))
-    (defun no-cider ()
+    (defun my/no-cider-connection ()
       (interactive)
       (message "Cider is not connected"))
     (bind-keys
@@ -1213,9 +1214,8 @@
 		    (cider-jack-in)
 		    (cider-eval-buffer)))
      ("C-c M-c" . cider-connect)
-     ("C-x C-e" . no-cider)
-
-     ("C-c C-p" . no-cider)
+     ("C-x C-e" . my/no-cider-connection)
+     ("C-c C-p" . my/no-cider-connection)
      ("C-c C-z" . cider-connect)
      ("C-c C-3" . synth-toggle-clojure-ignore-next-form))
     ;; compjure route formatting
@@ -1246,9 +1246,6 @@
   ("r" cljr-remove-unused-requires  "r")
   ("q" nil "cancel"))
 
-(use-package flycheck-clojure :ensure t
-  :config
-  (flycheck-clojure-setup))
 
 (use-package clojure-snippets
   :ensure t)
@@ -1270,6 +1267,7 @@
 
 (use-package image+
   :ensure t)
+
 
 (use-package cider
   :pin melpa-stable
@@ -1298,7 +1296,6 @@
 	      (setq buffer-save-without-query t)
 	      (clj-refactor-mode +1)
 	      (company-mode +1)
-	      (push '(">=" . ?≥) prettify-symbols-alist)
 	      ;(push '(alpha . ?α) prettify-symbols-alist)
 	      ;(push '(beta . ?β) prettify-symbols-alist)
 
@@ -1324,6 +1321,11 @@
     (setq cider-prefer-local-resources t
 	  cider-mode-line-show-connection nil
 
+	  cider-interactive-eval-output-destination 'repl-buffer
+
+	  cider-use-fringe-indicators t
+	  cider-use-overlays t
+
 	  cider-popup-stacktraces nil
 	  cider-popup-stacktraces-in-repl nil
 
@@ -1333,15 +1335,21 @@
 	  cider-annotate-completion-candidates t
  	  cider-test-show-report-on-success nil
 	  cider-prompt-save-file-on-load nil
+	  ;; lein
 	  cider-lein-command "lein"
 	  cider-lein-parameters "with-profile +power repl"
+	  ;; repl
+	  cider-repl-pop-to-buffer-on-connect nil
 	  cider-repl-wrap-history t
 	  cider-repl-use-clojure-font-lock nil
 	  cider-repl-display-help-banner nil
+	  cider-repl-pop-to-buffer-on-connect nil
+	  ;; nrepl
 	  nrepl-buffer-name-show-port t
 	  nrepl-log-messages nil
 	  nrepl-message-buffer-max-size 10000
 	  nrepl-port "4555")
+
     ;; jump to repl buffer on connect cider-repl-pop-to-buffer-on-connect t
     (add-to-list 'same-window-buffer-names "*cider*")
 
@@ -1349,15 +1357,21 @@
      :map cider-mode-map
 
      ("M-RET"     . cider-doc)
+     ("C-<return>"     . cider-eval-defun-at-point)
      ("C-c s"   .   my/cider-source)
 
      ("C-x M-e"   . cider-eval-last-sexp-and-replace)
+
+     ("C-c l p"   . my/cider-pull-dependency)
+     ("C-c C-r" . cider-eval-region)
+
      ("C-x c c"   . my/cider-eval-last-sexp-comment)
      ("C-c ."     . my/cider-dot)
      ("s-."       . cider-eval-expression-at-point)
      ("C-x M-r"   . cider-eval-last-sexp-to-repl)
-     ("C-x C-k"   . cider-eval-buffer)
+     ("C-x C-k"   . my/cider-eval-buffer)
      ("C-x M-h"   . cider-eval-to-point)
+     ("C-x C-n"   . cider-eval-ns-form)
      ("C-c r r"   . my/cider-require-symbol)
      ("C-c C-j"   . cider-jack-in)
      ("C-c C-q"   . cider-quit)
@@ -1372,8 +1386,13 @@
      ("C-c t d"   . cider-test-run-test)
      ("C-c t t"   . cider-test-run-test)
      ("C-c t n"   . cider-test-run-ns-tests)
+     ("C-c t p"   . cider-test-run-project-tests)
+     ("C-c t r"   . cider-test-show-report)
+     ("C-c C-t"   . cider-test-rerun-tests)
+
      ("C-c w t"   . my/cider-show-impl-and-test)
      ("C-c t m"   .   my/cider-midje-load-facts)
+     ("C-c t e"   .   my/cider-midje-autotest-error)
      ("C-c t <up>"   .   my/cider-midje-autotest-start)
      ("C-c t <down>"   .   my/cider-midje-autotest-stop))
 
@@ -1389,7 +1408,11 @@
 
     (bind-keys
      :map cider-repl-mode-map
-     ("C-c C-o" . cider-repl-clear-buffer))
+     ("C-c C-o" . cider-repl-clear-buffer)
+     ("C-c t m"   .   my/cider-midje-load-facts)
+     ("C-c t <up>"   .   my/cider-midje-autotest-start)
+     ("C-c t <down>"   .   my/cider-midje-autotest-stop)
+     )
 
     (bind-keys
      :map clojurescript-mode-map
@@ -1438,6 +1461,16 @@
      :map clojure-mode-map
      ("C-c c f" . cider-figwheel-repl))))
 
+(use-package flycheck-clojure
+  :ensure t
+  :pin melpa
+  :config
+  (setq flycheck-display-errors-function #'flycheck-pos-tip-error-messages))
+
+(flycheck-clojure-setup)
+
+;(use-package  flycheck-pos-tip :ensure t)
+
 
 (use-package cider-eval-sexp-fu)
 
@@ -1456,6 +1489,27 @@
     ;; 			  (cljr-remove-unused-requires)
     ;; 			  (cljr-sort-ns)
     ;; 			  (cljr-clean-ns))))))
+
+    (setq cljr-midje-test-declaration "[midje.sweet :refer :all]")
+
+    ;; monkey patch to refer all
+    (defun cljr--add-test-declarations ()
+      (save-excursion
+	(let* ((ns (clojure-find-ns))
+	       (source-ns (cljr--find-source-ns-of-test-ns ns (buffer-file-name))))
+	  (cljr--insert-in-ns ":require")
+	  (when source-ns
+	    (insert "[" source-ns " :refer :all]"))
+	  (cljr--insert-in-ns ":require")
+	  (insert (cond
+		   ((cljr--project-depends-on-p "midje")
+		    cljr-midje-test-declaration)
+		   ((cljr--project-depends-on-p "expectations")
+		    cljr-expectations-test-declaration)
+		   ((cljr--cljc-file-p)
+		    cljr-cljc-clojure-test-declaration)
+		   (t cljr-clojure-test-declaration))))
+	(indent-region (point-min) (point-max))))
 
     (setq cljr-magic-require-namespaces
 	  (-distinct (-concat cljr-magic-require-namespaces
@@ -1507,7 +1561,9 @@
      ("n c" . cljr-clean-ns)
      ("s"   . cljr-rename-symbol)
      ("r"   . cljr-add-require-to-ns)
-     ("i"   . cljr-add-import-to-ns))
+     ("i"   . cljr-add-import-to-ns)
+;     ("p"   . )
+     )
 
     (cljr-add-keybindings-with-modifier "C-s-")))
 
@@ -1782,16 +1838,19 @@
 
     (bind-keys
      :map haskell-mode-map
-     ("C-c C-l" . haskell-process-load-or-reload)
+     ("C-c C-l" . haskell-process-load-file)
      ("C-c C-j"     . haskell-interactive-bring)
      ("C-c C-t" . haskell-process-do-type)
      ("C-c C-i" . haskell-process-do-info)
      ("C-c C-c" . haskell-process-cabal-build)
      ("C-c C-o" . haskell-interactive-mode-clear)
-     ("C-c C-k" . haskell-process-load-or-reload)
+     ("C-c C-k" . haskell-process-load-file
+      )
      ("C-c C-z" . haskell-interactive-switch)
      ("C-c c"   . haskell-process-cabal)
-     ("SPC"     . haskell-mode-contextual-space))
+     ("SPC"     . self-insert-command))
+
+    (lookup-key global-map " ")
 
     (add-hook 'haskell-mode-hook
 	      (lambda ()
@@ -1848,15 +1907,23 @@
    (quote
     ("50598275d5ba41f59b9591203fdbf84c20deed67d5aa64ef93dd761c453f0e98" "91aecf8e42f1174c029f585d3a42420392479f824e325bf62184aa3b783e3564" "6a37be365d1d95fad2f4d185e51928c789ef7a4ccf17e7ca13ad63a8bf5b922f" default)))
  '(global-hl-line-mode t)
+ '(haskell-interactive-popup-error nil)
+ '(haskell-process-auto-import-loaded-modules t)
+ '(haskell-process-log t)
+ '(haskell-process-suggest-remove-import-lines t)
+ '(package-selected-packages
+   (quote
+    (swiper yaml-mode yafolding xkcd window-number visible-mark visible-color-code use-package travis sublimity string-inflection smooth-scrolling smex smart-mode-line skewer-mode scala-mode2 rdp rainbow-delimiters racket-mode purty-mode perspective paradox nim-mode neotree names multifiles markdown-mode magit-gitflow magit-gh-pulls magit-filenotify lua-mode keyfreq key-chord indent-guide image+ idomenu ido-vertical-mode ido-ubiquitous highlight-symbol highlight-stages highlight-sexp highlight-quoted highlight-parentheses highlight-numbers highlight-defined highlight-blocks hideshowvis hide-region helm-projectile helm-make helm-flx helm-company helm-ag haskell-mode hardcore-mode goto-last-change glsl-mode git-timemachine git-gutter geiser fringe-helper flycheck-pos-tip flycheck-clojure flx-ido fish-mode fancy-narrow evil-lisp-state evil-leader elisp-slime-nav edit-color-stamp dockerfile-mode debbugs company-restclient company-quickhelp command-log-mode clojure-snippets clojure-mode-extra-font-locking cljr-helm cider-eval-sexp-fu change-inner buffer-move browse-at-remote avy auto-highlight-symbol align-cljlet aggressive-indent ag ack-and-a-half)))
+ '(paradox-automatically-star t)
+ '(projectile-test-prefix-function (function my/projectile-test-prefix))
+ '(projectile-test-suffix-function (function my/projectile-test-suffix))
  '(safe-local-variable-values
    (quote
     ((Geiser-scheme-implementation . gambit)
      (TeX-master . "geiser")))))
 
 
-; (load-file "/Users/chris/git/geiser/elisp/geiser.el")
-
- (setq comint-redirect-verbose nil)
+(setq comint-redirect-verbose nil)
 
 (add-hook 'geiser-mode-hook
 	  (lambda ()
@@ -1864,23 +1931,13 @@
 	    (push '("lambda"  . ?λ) prettify-symbols-alist)))
 
 
+
+(defun dendrite-connect ()
+  (interactive)
+  (geiser-connect 'chicken "localhost" 6060))
+
 (setq geiser-repl-startup-time 2000)
 (setq geiser-connection-timeout 2000)
-
-;; (geiser-connect 'gambit "localhost" 1111 )
-
-;; (custom-set-faces
-;;  ;; custom-set-faces was added by Custom.
-;;  ;; If you edit it by hand, you could mess it up, so be careful.
-;;  ;; Your init file should contain only one such instance.
-;;  ;; If there is more than one, they won't work right.
-;;  )
-
-;; (require 'tcp)
-
-;; (with-current-buffer "* Gambit REPL *"
-;;   (process-send-string nil "(+ 1 1)"))
-
 
 (defun clear-messages ()
   (interactive)
@@ -1919,19 +1976,95 @@
 ;;                  (end-of-defun)
 ;;                  (point)))))
 
+;; (use-package flycheck-tip
+;;   :config
+;;   (progn
+;;     (setq flycheck-display-errors-function #'flycheck-pos-tip-error-messages)
+;;     (flycheck-pos-tip-mode 1)))
 
+(use-package paradox :ensure t
+  :init (setq paradox-github-token "f8819f1b68cfcfe231a3bbce58a39303cbeeb35f"))
 
-(use-package flycheck-tip
+(defun my/dired-do-command (command)
+  "Run COMMAND on marked files. Any files not already open will be opened.
+After this command has been run, any buffers it's modified will remain
+open and unsaved."
+  (interactive
+   (list
+    (let ((print-level nil)
+          (minibuffer-history-position 0)
+          (minibuffer-history-sexp-flag (1+ (minibuffer-depth))))
+      (unwind-protect
+          (read-from-minibuffer
+           "Command: " (prin1-to-string (nth 0 command-history))
+           read-expression-map t
+           (cons 'command-history 0))
 
+        ;; If command was added to command-history as a
+        ;; string, get rid of that.  We want only
+        ;; evaluable expressions there.
+        (if (stringp (car command-history))
+            (setq command-history (cdr command-history)))))))
+  (dolist (filename (dired-get-marked-files))
+    (with-current-buffer (find-file-noselect filename)
+      (if (symbolp command)
+          (call-interactively command)
+        (eval command)))))
+
+(use-package dired
   :config
-  (progn
-    (setq flycheck-display-errors-function #'flycheck-pos-tip-error-messages)
-    (flycheck-pos-tip-mode 1)
+  (bind-keys
+   :map dired-mode-map
+   ("C-c M-x" . my/dired-do-command)))
 
-
-    )
 (use-package auto-revert
   :diminish "")
 
+(use-package swiper
+  :ensure t
+  :diminish "")
 
-  )
+;;;; Ligatures
+
+;; requires a mac build of emacs:
+;; brew tap railwaycat/emacsmacport
+;; brew cask install emacs-mac
+
+(when (window-system)
+  (set-default-font "Fira Code Light"))
+
+(set-face-attribute 'default nil :family "Fira Code Light" :height 120 :weight 'light :width 'extra-condensed)
+
+;; enable ligatures
+(let ((alist '(;;(33 . ".\\(?:\\(?:==\\|!!\\)\\|[!=]\\)")
+               (35 . ".\\(?:###\\|##\\|_(\\|[#(?[_{]\\)")
+               (36 . ".\\(?:>\\)")
+               (37 . ".\\(?:\\(?:%%\\)\\|%\\)")
+               (38 . ".\\(?:\\(?:&&\\)\\|&\\)")
+               (42 . ".\\(?:\\(?:\\*\\*/\\)\\|\\(?:\\*[*/]\\)\\|[*/>]\\)")
+               (43 . ".\\(?:\\(?:\\+\\+\\)\\|[+>]\\)")
+               (45 . ".\\(?:\\(?:-[>-]\\|<<\\|>>\\)\\|[<>}~-]\\)")
+               ;;(46 . ".\\(?:\\(?:\\.[.<]\\)\\|[.=-]\\)")
+               (47 . ".\\(?:\\(?:\\*\\*\\|//\\|==\\)\\|[*/=>]\\)")
+               (48 . ".\\(?:x[a-zA-Z]\\)")
+               (58 . ".\\(?:::\\|[:=]\\)")
+               (59 . ".\\(?:;;\\|;\\)")
+               (60 . ".\\(?:\\(?:!--\\)\\|\\(?:~~\\|->\\|\\$>\\|\\*>\\|\\+>\\|--\\|<[<=-]\\|=[<=>]\\||>\\)\\|[*$+~/<=>|-]\\)")
+               (61 . ".\\(?:\\(?:/=\\|:=\\|<<\\|=[=>]\\|>>\\)\\|[<=>~]\\)")
+               (62 . ".\\(?:\\(?:=>\\|>[=>-]\\)\\|[=>-]\\)")
+               (63 . ".\\(?:\\(\\?\\?\\)\\|[:=?]\\)")
+               (91 . ".\\(?:]\\)")
+               (92 . ".\\(?:\\(?:\\\\\\\\\\)\\|\\\\\\)")
+               (94 . ".\\(?:=\\)")
+               (119 . ".\\(?:ww\\)")
+               (123 . ".\\(?:-\\)")
+               (124 . ".\\(?:\\(?:|[=|]\\)\\|[=>|]\\)")
+               (126 . ".\\(?:~>\\|~~\\|[>=@~-]\\)")
+               )
+             ))
+  (dolist (char-regexp alist)
+    (set-char-table-range composition-function-table (car char-regexp)
+                          `([,(cdr char-regexp) 0 font-shape-gstring]))))
+
+(provide 'init)
+;;; init.el ends here

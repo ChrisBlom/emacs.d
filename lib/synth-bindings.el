@@ -2,29 +2,20 @@
 
 (require 'synth-utils)
 
-(defun live-delete-whitespace-except-one ()
-  (interactive)
-  (just-one-space -1))
-
-(defun one-newline ()
-  (interactive)
-  (join-line -1))
-
-(defun synth-two-windows ()
-  (interactive)
-  (delete-other-windows)
-  (split-window-horizontally))
-
-(defun kill-current-unmodified-buffer ()
-  (interactive)
-  (kill-buffer-if-not-modified (current-buffer)))
-
 ;; global bindings
 (bind-keys
+
  ("C-h"       . backward-delete-char)
  ("M-h"       . backward-kill-word)
  ("C-z"       . nil)
+
  ("s-w"       . kill-current-unmodified-buffer)
+ ("s-r"       . revert-buffer)
+ ("s-v"       . yank)
+ ("s-c"       . kill-ring-save)
+ ("s-x"       . kill-region)
+
+ ;; windows
  ("C-c w 3"   . synth-two-windows)
  ("C-c w w"   . toggle-frame-fullscreen)
  ("C-c w s"   . toggle-window-split)
@@ -32,6 +23,9 @@
  ("C-c w f"   . winner-redo)
  ("C-c k 2"   . (lambda () (interactive) (with-current-buffer-window (kill-buffer))))
  ("C-x C-k"   . kill-current-unmodified-buffer)
+ ("C-<prior>" . winner-undo)
+ ("C-<next>"  . winner-redo)
+
  ("M-<left>"  . backward-word)
  ("M-<right>" . forward-word)
  ("M-SPC"     . live-delete-whitespace-except-one)
@@ -44,17 +38,15 @@
  ("s-<prior>" . persp-prev)
  ("s-<next>"  . persp-next)
 
- ("C-<prior>" . winner-undo)
- ("C-<next>"  . winner-redo)
-
- ("s-t"       . nil))
-
-
-(define-key global-map (kbd "<s-b>") #'bury-buffer)
-
+ ;;buffer
+ ("C-x M-k" . delete-current-buffer-file)
+ ("C-x M-r" . rename-file-and-buffer)
+ ("s-t"     . nil)
+ ("s-b"     . bury-buffer))
 
 (bind-keys
  :map emacs-lisp-mode-map
+ ("C-<return>" . eval-last-sexp)
  ("C-x M-e" . eval-and-replace)
  ("C-c C-k" . eval-buffer)
  ("C-c m b" . eval-buffer)

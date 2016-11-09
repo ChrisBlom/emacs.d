@@ -78,10 +78,8 @@
 (setq split-height-threshold 80)
 (setq split-width-threshold 120)
 
-
 (setq split-height-threshold nil)
 (setq split-width-threshold 0)
-
 
 (setq initial-scratch-message ";; Loaded emacs")
 
@@ -89,8 +87,6 @@
 
 ;; highlight current line
 (global-hl-line-mode +1)
-
-
 
 ;;
 (defalias 'yes-or-no-p 'y-or-n-p)

@@ -73,6 +73,9 @@ Also bind `class' to ((class color) (min-colors 89))."
      `(diff-header ((t (:foreground ,synth-fg :background "#232526"))))
      `(diff-hunk-header ((t (:foreground "#AE81FF" :background "#232526"))))
      `(diff-removed ((t (:foreground "#F92672" :weight bold))))
+     `(ediff-even-diff-A ((t (:foreground nil :background "#000000" :weight bold))))
+     `(ediff-odd-diff-A ((t (:foreground nil :background nil :box t :weight bold))))
+
      ;; modeline
      `(mode-line-buffer-id ((t (:foreground "red" :background "#000000" :weight bold))))
      `(mode-line-mousable-minor-mode ((t (:foreground "#BCBCBC" :background "#000000"))))
@@ -144,8 +147,10 @@ Also bind `class' to ((class color) (min-colors 89))."
      ;;
      `(eval-sexp-fu-flash ((t (:inverse-video t :foreground "#6e8b3d" :background "white" ))))
      `(pulse-highlight-start-face ((t (:background ,(hsl 0.35 0.7 0.5)))))
+     ;; Flyscheck
+     `(flycheck-warning ((t (:underline (:style line :color "#FFAA20") :weight bold))))
 
-      `(highlight-numbers-number ((t (:inherit font-lock-constant-face :foreground ,(hsl 0.35 0.4 0.8) ))))
+     `(highlight-numbers-number ((t (:inherit font-lock-constant-face :foreground ,(hsl 0.35 0.4 0.8) ))))
      ;; Rainbow delimeters
      `(rainbow-delimiters-depth-1-face ((t (:foreground  ,(hsl (/ 6 10.0) paren-sat paren-lum)))))
      `(rainbow-delimiters-depth-2-face ((t (:foreground  ,(hsl (/ 1 10.0) paren-sat paren-lum)))))
@@ -198,9 +203,13 @@ Also bind `class' to ((class color) (min-colors 89))."
      `(helm-candidate-number ((t :foreground ,(hsl 0.45 0.6 0.5) :background nil)))
      `(helm-separator ((t :foreground ,(hsl 0.1 0.8 0.5) :background nil)))
 
-     `(highlight-stages-level-1-face ((t :background ,(hsl 0.7 0.25 0.2))))
+     `(highlight-stages-level-1-face ((t :background ,(hsl 0.7 0.25 0.2)
+					 :underline nil
+					 )))
 
-     )))
+     `(highlight-stages-negative-level-face ((t :background ,(hsl 0.7 0.25 0.2)
+						:underline (:style line :color ,(hsl 0.1 0.5 0.8))
+						))))))
 
 (and load-file-name
      (boundp 'custom-theme-load-path)

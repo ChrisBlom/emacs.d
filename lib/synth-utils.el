@@ -36,13 +36,23 @@
         (kill-buffer buffer)
         (message "File '%s' successfully removed" filename)))))
 
-(bind-keys
- ("C-x M-k" . delete-current-buffer-file)
- ("C-x M-r" . rename-file-and-buffer))
 
-(defun gitx ()
+(defun live-delete-whitespace-except-one ()
   (interactive)
-  (shell-command "gitx ."))
+  (just-one-space -1))
+
+(defun one-newline ()
+  (interactive)
+  (join-line -1))
+
+(defun synth-two-windows ()
+  (interactive)
+  (delete-other-windows)
+  (split-window-horizontally))
+
+(defun kill-current-unmodified-buffer ()
+  (interactive)
+  (kill-buffer-if-not-modified (current-buffer)))
 
 ;; Push mark when using ido-imenu
 (defvar push-mark-before-goto-char nil)
@@ -172,8 +182,6 @@
 	   (describe-function sym))
 	  ((setq sym (variable-at-point)) (describe-variable sym)))))
 
-
-
 (defun synth-delete-window (n)
   "With numeric prefix: kill the window with number n, otherwise kills the current window"
   (interactive "P")
@@ -187,14 +195,12 @@
   (interactive "P")
   (when (integerp n)
     (select-window (nth (- n 1) (butlast (window-number-list))) ))
-  (delete-other-windows))
-
-
+  (delete-other-windows)
+  (balance-windows))
 
 (bind-keys
  ("C-x 0" . synth-delete-window)
  ("C-x 1" . synth-delete-other-windows))
-
 
 (require 'color)
 
@@ -255,17 +261,32 @@
 (defun live-fontify-hex-colours-in-current-buffer ()
   (interactive)
   (font-lock-add-keywords nil
-                         '((live-fontify-hex-colors))))
+			  '((live-fontify-hex-colors))))
 
-(defun prelude-copy-file-name-to-clipboard ()
-  "Copy the current buffer file name to the clipboard."
-  (interactive)
+(defun copy-relative-file-name-to-clipboard ()
   (let ((filename (if (equal major-mode 'dired-mode)
-                      default-directory
-                    (buffer-file-name))))
-    (when filename
-      (kill-new filename)
-      (message "Copied buffer file name '%s' to the clipboard." filename))))
+		      default-directory
+		    (buffer-file-name)))
+	(project-dir (condition-case nil (projectile-project-root) (error nil))))
+    (cond
+     ((and filename project-dir)
+      (kill-new (s-chop-prefix project-dir filename)))
+
+     (filename
+      (kill-new filename)))))
+
+;; from prelude
+(defun copy-file-name-to-clipboard (&optional arg)
+  "Copy the current buffer file name to the clipboard."
+  (interactive "P")
+  (if arg
+      (copy-relative-file-name-to-clipboard)
+      (let ((filename (if (equal major-mode 'dired-mode)
+			  default-directory
+			(buffer-file-name))))
+	(when filename
+	  (kill-new filename)
+	  (message "Copied buffer file name '%s' to the clipboard." filename)))))
 
 (defun sudo-edit (&optional arg)
   "Edit currently visited file as root.
@@ -311,9 +332,6 @@ and so on."
                            (y-or-n-p (format "Directory %s does not exist. Create it?" dir)))
 		  (when (y-or-n-p (format "Create directory?: %s " dir))
 		    (make-directory dir t)))))))
-
-
-
 
 (defun endless/isearch-symbol-with-prefix (p)
   "Like isearch, unless prefix argument is provided.
