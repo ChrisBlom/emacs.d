@@ -39,6 +39,10 @@
 	eval-last-sexp
 	evil-forward-char
 	forward-sentence
+	evil-delete
+	evil-forward-char
+	forward-sentence
+	haskell-indentation-common-electric-command
 	haskell-mode-contextual-space
 	helm-maybe-exit-minibuffer
 	helm-show-kill-ring
@@ -49,6 +53,7 @@
 	indent-for-tab-command
 	kill-region
 	kill-region-or-backward
+	kill-sentence
 	live-delete-whitespace-except-one
 	live-paredit-backward-kill-sexp
 	live-paredit-forward-down
@@ -58,6 +63,7 @@
 	org-delete-char
 	org-force-self-insert
 	org-kill-line
+	org-metaleft
 	org-metaright
 	org-return-indent
 	org-self-insert-command
@@ -81,6 +87,7 @@
 	paredit-open-round
 	paredit-open-square
 	paredit-semicolon
+	paredit-splice-sexp
 	paredit-splice-sexp-killing-backward
 	paredit-splice-sexp-killing-forward
 	paredit-split-sexp
@@ -90,6 +97,7 @@
 	transpose-words
 	yaml-electric-dash-and-dot
 	yas-expand
+	yas-expand-from-trigger-key
 	))
 
 (setq mc/cmds-to-run-once
@@ -97,6 +105,7 @@
 	c-electric-semi&comma
 	cider-jack-in
 	cider-load-buffer
+	cider-macroexpand-1
 	cider-switch-to-repl-buffer
 	delete-indentation
 	evil-insert
@@ -106,8 +115,13 @@
 	fancy-widen
 	geiser-compile-current-buffer
 	geiser-mode-switch-to-repl
+	goto-last-change
+	haskell-interactive-mode-clear
 	haskell-interactive-switch
+	haskell-process-load-file
+	helm-ag--edit-commit
 	hydra--negative-argument
+	hydra-refactor/body
 	hydra-refactor/cljr-clean-ns
 	hydra-refactor/cljr-move-to-let
 	hydra-refactor/cljr-remove-unused-requires
@@ -121,7 +135,10 @@
 	mouse-buffer-menu
 	mouse-drag-secondary
 	mouse-set-region
+	my/cider-cljs-refresh
 	next-buffer
+	next-buffer
+	org-end-of-line
 	paredit-close-curly
 	persp-prev
 	previous-buffer
