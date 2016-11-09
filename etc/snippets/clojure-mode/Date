@@ -1,6 +1,5 @@
-# -*- mode: snippet; require-final-newline: nil -*-
-# name: Date
-# key: Date
-# binding: direct-keybinding
+# -*- mode: snippet -*-
+# name: date
+# key: date
 # --
 (java.util.Date.)
