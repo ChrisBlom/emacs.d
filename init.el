@@ -327,7 +327,7 @@
 
 (use-package aggressive-indent
   :ensure t
-  :diminish "=>")
+  :diminish "")
 
 ;; better grep, requires ag to be installed
 (use-package ag :ensure t)
@@ -364,8 +364,8 @@
     (remhash 'make projectile-project-types)
 
     (projectile-global-mode +1)
-    (setq projectile-mode-line-lighter "ⓟ")
-    (setq projectile-mode-line "ⓟ") ;; smart modeline already shows the current projectile project
+    (setq projectile-mode-line-lighter "")
+    (setq projectile-mode-line "") ;; smart modeline already shows the current projectile project
     (setq projectile-completion-system 'ido)
 
     (bind-keys :map projectile-command-map
@@ -431,7 +431,7 @@
 ;; completion framework
 (use-package company
   :ensure t
-  :diminish "Ⓒ "
+  :diminish ""
   :config
   (progn
     (setq company-minimum-prefix-length 2
@@ -516,7 +516,7 @@
 ;; show changes in fringe
 (use-package git-gutter
   :ensure t
-  :diminish "± "
+  :diminish ""
   :config
   (progn
     (global-git-gutter-mode +1)
@@ -526,7 +526,7 @@
 ;; awesome undo/redo
 (use-package undo-tree
   :ensure t
-  :diminish "↶ "
+  :diminish ""
   :bind ("C-x u" . undo-tree-visualize)
   :config
   (progn
@@ -538,7 +538,7 @@
 
 ;; show argument lists in echo area
 (use-package eldoc
-  :diminish "ⓛ "
+  :diminish ""
   :commands eldoc-mode
   :init
   (progn
@@ -611,6 +611,7 @@
 ;; snippets
 (use-package yasnippet
   :ensure t
+  :diminish ""
 ;  :commands (yas-minor-mode yas-global-mode)
   :init
   (setq yas-snippet-dirs
@@ -648,6 +649,7 @@
 (use-package eval-pulse
   :init
   (setq eval-pulse-depth 1)
+  :diminish ""
   :config
   (progn
     (eval-pulse-mode +1)))
@@ -806,7 +808,7 @@
      ("C-c C-k" . racket-run))))
 
 (use-package hideshow
-  ;:diminish ""
+  :diminish ""
   :config
   (progn
     (bind-keys
@@ -1442,6 +1444,7 @@
 ;; refactoring
 (use-package clj-refactor
   :ensure t
+  :diminish ""
   :config
   (progn
     (use-package cljr-helm :ensure t)
@@ -1539,6 +1542,7 @@
 ;; Display narrowing by graying out the rest
 (use-package fancy-narrow
   :ensure t
+  :diminish ""
   :init (add-hook 'prog-mode-hook #'fancy-narrow-mode)
   :commands (fancy-narrow-mode))
 
@@ -1554,6 +1558,7 @@
 
 (use-package highlight-parentheses
   :ensure t
+  :diminish ""
   :config
   (global-highlight-parentheses-mode +1)
   (progn
@@ -1925,6 +1930,8 @@
 
 
     )
+(use-package auto-revert
+  :diminish "")
 
 
   )
