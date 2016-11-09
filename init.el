@@ -158,7 +158,7 @@
   (progn
     (ido-vertical-mode +1)
     (setq ido-vertical-show-count t)
-    (setq ido-vertical-define-keys 'C-n-and-C-p-only)))
+    (setq ido-vertical-define-keys 'C-n-C-p-up-down-left-right)))
 
 (use-package ido-completing-read+
   :ensure t)
