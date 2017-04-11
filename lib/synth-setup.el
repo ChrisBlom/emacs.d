@@ -48,20 +48,10 @@
 ;; shells start in user home by default
 (setq command-line-default-directory "~/")
 
-;; add extra package repositories
-(setq package-archives '(("gnu"          . "http://elpa.gnu.org/packages/")
-                         ("marmalade"    . "https://marmalade-repo.org/packages/")
-                         ("melpa"        . "http://melpa.org/packages/")
-			 ("melpa-stable" . "http://stable.melpa.org/packages/")))
-
-;; osx specific
-(setq mac-option-modifier 'meta)
-(setq mac-command-modifier 'super)
-(setq mac-function-modifier 'command)
-
 (setq ring-bell-function 'ignore)
 
 (setq max-lisp-eval-depth 10000)
+
 (set-variable 'max-specpdl-size 5000)
 
 ;; initiate GC every 20 mb allocated
@@ -85,8 +75,50 @@
 
 (setq dired-dwim-target t)
 
-;; highlight current line
-(global-hl-line-mode +1)
-
 ;;
 (defalias 'yes-or-no-p 'y-or-n-p)
+
+
+(setq dired-listing-switches "-alh")
+
+;;;; Ligatures
+
+;; requires a mac build of emacs:
+;; brew tap railwaycat/emacsmacport
+;; brew cask install emacs-mac
+
+(when (window-system)
+  (set-default-font "Fira Code Light"))
+
+(set-face-attribute 'default nil :family "Fira Code Light" :height 120 :weight 'light :width 'extra-condensed)
+
+;; enable ligatures
+(let ((alist '(;;(33 . ".\\(?:\\(?:==\\|!!\\)\\|[!=]\\)")
+               (35 . ".\\(?:###\\|##\\|_(\\|[#(?[_{]\\)")
+               (36 . ".\\(?:>\\)")
+               (37 . ".\\(?:\\(?:%%\\)\\|%\\)")
+               (38 . ".\\(?:\\(?:&&\\)\\|&\\)")
+               (42 . ".\\(?:\\(?:\\*\\*/\\)\\|\\(?:\\*[*/]\\)\\|[*/>]\\)")
+               (43 . ".\\(?:\\(?:\\+\\+\\)\\|[+>]\\)")
+               (45 . ".\\(?:\\(?:-[>-]\\|<<\\|>>\\)\\|[<>}~-]\\)")
+               ;;(46 . ".\\(?:\\(?:\\.[.<]\\)\\|[.=-]\\)")
+               (47 . ".\\(?:\\(?:\\*\\*\\|//\\|==\\)\\|[*/=>]\\)")
+               (48 . ".\\(?:x[a-zA-Z]\\)")
+               (58 . ".\\(?:::\\|[:=]\\)")
+               (59 . ".\\(?:;;\\|;\\)")
+               (60 . ".\\(?:\\(?:!--\\)\\|\\(?:~~\\|->\\|\\$>\\|\\*>\\|\\+>\\|--\\|<[<=-]\\|=[<=>]\\||>\\)\\|[*$+~/<=>|-]\\)")
+               (61 . ".\\(?:\\(?:/=\\|:=\\|<<\\|=[=>]\\|>>\\)\\|[<=>~]\\)")
+               (62 . ".\\(?:\\(?:=>\\|>[=>-]\\)\\|[=>-]\\)")
+               (63 . ".\\(?:\\(\\?\\?\\)\\|[:=?]\\)")
+               (91 . ".\\(?:]\\)")
+               (92 . ".\\(?:\\(?:\\\\\\\\\\)\\|\\\\\\)")
+               (94 . ".\\(?:=\\)")
+               (119 . ".\\(?:ww\\)")
+               (123 . ".\\(?:-\\)")
+               (124 . ".\\(?:\\(?:|[=|]\\)\\|[=>|]\\)")
+               (126 . ".\\(?:~>\\|~~\\|[>=@~-]\\)")
+               )
+             ))
+  (dolist (char-regexp alist)
+    (set-char-table-range composition-function-table (car char-regexp)
+                          `([,(cdr char-regexp) 0 font-shape-gstring]))))

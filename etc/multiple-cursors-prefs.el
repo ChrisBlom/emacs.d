@@ -4,6 +4,7 @@
 (setq mc/cmds-to-run-for-all
       '(
 	ahs-back-to-start
+	ahs-backward
 	ahs-edit-mode
 	align-cljlet
 	backward-delete-char
@@ -19,6 +20,7 @@
 	cider-eval-defun-at-point
 	cider-eval-last-sexp
 	cider-eval-last-sexp-and-replace
+	cider-eval-print-last-sexp
 	cider-pp
 	cljr-cycle-coll
 	cljr-raise-sexp
@@ -32,15 +34,16 @@
 	comment-dwim
 	cua-copy-region
 	cua-paste
+	dabbrev-expand
 	electric-newline-and-maybe-indent
 	end-of-buffer
 	eval-and-replace
 	eval-defun
 	eval-last-sexp
-	evil-forward-char
-	forward-sentence
 	evil-delete
 	evil-forward-char
+	evil-forward-char
+	forward-sentence
 	forward-sentence
 	haskell-indentation-common-electric-command
 	haskell-mode-contextual-space
@@ -58,7 +61,9 @@
 	live-paredit-backward-kill-sexp
 	live-paredit-forward-down
 	live-paredit-forward-kill-sexp
+	mac-mwheel-scroll
 	magit-discard-item
+	magit-stash-drop
 	move-line-up
 	org-delete-char
 	org-force-self-insert
@@ -103,11 +108,13 @@
 (setq mc/cmds-to-run-once
       '(
 	c-electric-semi&comma
+	cider-interrupt
 	cider-jack-in
 	cider-load-buffer
 	cider-macroexpand-1
 	cider-switch-to-repl-buffer
 	delete-indentation
+	endless/isearch-symbol-with-prefix
 	evil-insert
 	evil-normal-state
 	evil-normal-state
@@ -120,6 +127,7 @@
 	haskell-interactive-switch
 	haskell-process-load-file
 	helm-ag--edit-commit
+	helm-company
 	hydra--negative-argument
 	hydra-refactor/body
 	hydra-refactor/cljr-clean-ns
@@ -127,8 +135,11 @@
 	hydra-refactor/cljr-remove-unused-requires
 	hydra-refactor/nil
 	ido-find-file
+	ignore
+	magit-status
 	markdown-exdent-or-delete
 	mc/insert-character
+	mc/insert-characters
 	mc/mark-dwim
 	mc/mark-next-like-this-repeat
 	mc/mark-previous-like-this-repeat
@@ -142,6 +153,7 @@
 	paredit-close-curly
 	persp-prev
 	previous-buffer
+	projectile-find-file-dwim
 	projectile-toggle-between-implementation-and-test
 	shell-command
 	smex

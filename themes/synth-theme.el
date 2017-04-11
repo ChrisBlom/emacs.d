@@ -3,20 +3,17 @@
 (deftheme synth "Synth color theme")
 
 (defvar synth-colors-alist
-  `( (synth-bg          . ,(hsl 0.1 0.1 0.1))
-     (synth-fg          . ,(hsl 0.15 0.95 0.95))
-     (paren-sat         . 0.9)
-     (synth-pale-yellow . ,(hsl 0.14 0.7 0.7))))
+  `())
 
 (setq synth-colors-alist
-      `( (synth-bg          . ,(hsl 1.8 0.01 0.1))
-         (synth-fg          . ,(hsl 0.15 0.95 0.95))
-         (paren-sat         . 0.15)
-	 (paren-lum         . 0.5)
+      `( (synth-bg          . ,(hsl 2.4 0.2 0.1))
+         (synth-fg          . ,(hsl 0.1 0.2 0.9))
+         (paren-sat         . 0.25)
+	 (paren-lum         . 0.4)
          (synth-pale-yellow . ,(hsl 0.14 0.7 0.7))))
 
 (defmacro with-synth-color-variables (&rest body)
-  "`let' bind all colors defined in `zenburn-colors-alist' around BODY.
+  "`let' bind all colors defined in `synth-colors-alist' around BODY.
 Also bind `class' to ((class color) (min-colors 89))."
   (declare (indent 0))
   `(let ((class '((class color) (min-colors 89)))
@@ -29,7 +26,7 @@ Also bind `class' to ((class color) (min-colors 89))."
   (with-synth-color-variables
     (custom-theme-set-faces
      'synth
-     `(default((t (:foreground ,synth-fg :background ,synth-bg))))
+     `(default ((t (:foreground ,synth-fg :background ,synth-bg))))
      `(bold    ((t (:weight bold))))
      `(italic ((t (:slant italic))))
      `(bold-italic ((t (:weight bold :slant italic))))
@@ -91,8 +88,7 @@ Also bind `class' to ((class color) (min-colors 89))."
      `(font-lock-comment-face ((t (:foreground ,(hsl 0.45 0.05 0.55) :slant italic))))
      `(font-lock-comment-delimiter-face ((t (:foreground "#667477" :slant italic))))
      `(font-lock-constant-face ((t (:foreground ,(hsl 1.7 0.9 0.8)))))
-     `(font-lock-string-face ((t (:foreground ,(hsl 0.15 0.7 0.8)))))
-     `(font-lock-doc-face ((t (:foreground ,(hsl 0.15 0.8 0.7) :slant italic :slant italic))))
+     `(font-lock-string-face ((t (:foreground ,(hsl 0.15 0.7 0.8)))))     `(font-lock-doc-face ((t (:foreground ,(hsl 0.45 0.45 0.8) :slant italic :slant italic))))
      `(font-lock-variable-name-face ((t (:foreground ,(hsl 0.55 0.7 0.55) :bold t :underline nil))))
      `(font-lock-function-name-face ((t (:foreground ,(hsl 0.45 0.7 0.5) :bold t :underline nil))))
      `(font-lock-keyword-face       ((t (:foreground ,(hsl 0.5 0.9 0.85)))))

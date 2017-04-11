@@ -168,3 +168,37 @@ If invoked with a PREFIX argument, print the result in the current buffer."
   (interactive)
   (cider-eval-buffer)
   (cider-repl-set-ns))
+
+(defun my/cljr-projectile-clean-ns ()
+  (interactive)
+  (dolist (filename (-filter (lambda (x) (s-ends-with? ".clj" x ))  (projectile-current-project-files)))
+    (with-current-buffer (find-file-noselect filename)
+      (condition-case ex
+	  (progn
+	    (cljr-clean-ns)
+	    (save-buffer)
+	    (kill-buffer))
+	('error (message (format "Caught exception: [%s] %s" ex (buffer-name))))))))
+
+(defun add-newline-after-require ()
+  (interactive)
+  (condition-case ex
+      (save-excursion
+	(goto-char 0)
+	(re-search-forward (rx
+			    "(:require"
+			    (+ (or "\n" space))
+			    "["))
+	(backward-char)
+	(just-one-space -1)
+	(newline)
+	(indent-region
+	 (save-excursion (cljr--goto-ns) (point))
+	 (save-excursion (cljr--goto-ns) (forward-char) (paredit-close-parenthesis) (point))))
+    ('search-failed nil)))
+
+(advice-add 'cljr-clean-ns :after 'add-newline-after-require)
+
+
+(:require
+[])
