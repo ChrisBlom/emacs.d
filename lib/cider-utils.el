@@ -70,6 +70,14 @@ If invoked with a PREFIX argument, print the result in the current buffer."
 	 (do-expr (s-replace "(comment" "(do" expr)))
     (cider-interactive-eval do-expr)))
 
+(defun my/cider-eval-last-sexp-quoted ()
+  "Evaluate the expression preceding point.
+If invoked with a PREFIX argument, print the result in the current buffer."
+  (interactive)
+  (let* ((expr (cider-last-sexp))
+	 (do-expr (format "(quote %s)" expr)))
+    (cider-interactive-eval do-expr)))
+
 (defun cider-set-validate ()
   (interactive)
   (cider-interactive-eval
@@ -128,6 +136,9 @@ If invoked with a PREFIX argument, print the result in the current buffer."
   (interactive)
   (cider-interactive-eval (format "(./distill '%s)" (cider-last-sexp))))
 
+(defun my/cider-show-graph ()
+  (interactive)
+  (cider-interactive-eval (format "(show-graph (let [s %s] (cond (map? s) s (var? s) (var-get s))))" (cider-last-sexp))))
 
 (defun my/cider-throw-last-exception ()
   (interactive)
