@@ -78,6 +78,12 @@ If invoked with a PREFIX argument, print the result in the current buffer."
 	 (do-expr (format "(quote %s)" expr)))
     (cider-interactive-eval do-expr)))
 
+(defun my/cider-debug-symbol-at-point ()
+  (interactive)
+  (save-excursion
+    (cider-find-var)
+    (cider-debug-defun-at-point)))
+
 (defun cider-set-validate ()
   (interactive)
   (cider-interactive-eval
