@@ -21,7 +21,8 @@
 ;; only use use-package.el at compile-time
 (eval-when-compile (require 'use-package))
 
-(require 'diminish)
+
+
 (require 'bind-key)
 
 ;; put libs that cannot be loaded as packages on the load path
