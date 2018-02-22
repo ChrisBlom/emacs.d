@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: rethrow
+# key: rethrow
+# --
+(try
+  $1
+  (catch Exception e
+    (throw (ex-info "Error" {} e))))

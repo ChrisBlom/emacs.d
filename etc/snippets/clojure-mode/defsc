@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name: defsc
+# key: defsc
+# --
+(defsc ${1:Name} [this {:keys [${2:Key}] :as props}]
+  {:query [:${2}]
+   :ident (fn [] [:change/me :just.a/demo])
+   :initial-state {}}
+  (dom/div #js {} (str ${2})))

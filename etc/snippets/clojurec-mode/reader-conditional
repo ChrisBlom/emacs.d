@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: reader-conditional
+# key: #?
+# --
+#?(:cljs $1
+   :cljc $2)

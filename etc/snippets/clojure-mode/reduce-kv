@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: reduce-kv
+# key: rkv
+# --
+(reduce-kv (fn [${1:acc} ${2:k} ${3:v}]
+              ${4:(assoc $1 $2 $3)})
+             init
+             m)
