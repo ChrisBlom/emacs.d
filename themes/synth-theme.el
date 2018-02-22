@@ -40,6 +40,7 @@ Also bind `class' to ((class color) (min-colors 89))."
      `(secondary-selection ((t (:background ,(hsl 0.1 0.1 0.23)))))
 
      `(magit-section-title ((t (:bold nil :underline t :background ,(hsl 0.1 0.1 0.3)))))
+     `(magit-hash ((t (:bold t :underline nil :foreground ,(hsl 0.1 0.1 0.7)))))
 
      `(magit-blame-heading ((t (:bold nil :underline nil :background ,(hsl 0.1 0.1 0.2)
 				      :foreground ,(hsl 0.1 0.5 0.5)

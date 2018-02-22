@@ -81,6 +81,12 @@
 
 (setq dired-listing-switches "-alh")
 
+;; remove trailing whitespace on save
+(add-hook 'before-save-hook 'delete-trailing-whitespace)
+
+;; don't create .#filename lockfiles
+(setq create-lockfiles nil)
+
 ;;;; Ligatures
 
 ;; requires a mac build of emacs:
@@ -90,7 +96,12 @@
 (when (window-system)
   (set-default-font "Fira Code Light"))
 
-(set-face-attribute 'default nil :family "Fira Code Light" :height 120 :weight 'light :width 'extra-condensed)
+(set-face-attribute 'default nil :family "Fira Code Light" :height 100 :weight 'light :width 'extra-condensed)
+
+
+(defun use-firacode ()
+  (interactive)
+  (set-face-attribute 'default nil :family "Fira Code Light" :height 100 :weight 'light :width 'extra-condensed))
 
 ;; enable ligatures
 (let ((alist '(;;(33 . ".\\(?:\\(?:==\\|!!\\)\\|[!=]\\)")

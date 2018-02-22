@@ -35,6 +35,7 @@
 	cua-copy-region
 	cua-paste
 	dabbrev-expand
+	dired-toggle-read-only
 	electric-newline-and-maybe-indent
 	end-of-buffer
 	eval-and-replace
@@ -64,7 +65,10 @@
 	mac-mwheel-scroll
 	magit-discard-item
 	magit-stash-drop
+	mark-whole-buffer
 	move-line-up
+	my/paredit-right
+	org-beginning-of-line
 	org-delete-char
 	org-force-self-insert
 	org-kill-line
@@ -73,6 +77,8 @@
 	org-return-indent
 	org-self-insert-command
 	org-todo
+	org-transpose-element
+	org-yank
 	paredit-backslash
 	paredit-backward-kill-word
 	paredit-backward-slurp-sexp
@@ -100,6 +106,7 @@
 	sh-assignment
 	transpose-sexps
 	transpose-words
+	wdired-finish-edit
 	yaml-electric-dash-and-dot
 	yas-expand
 	yas-expand-from-trigger-key
@@ -108,13 +115,17 @@
 (setq mc/cmds-to-run-once
       '(
 	c-electric-semi&comma
+	cider-doc
+	cider-eval-expression-at-point
 	cider-interrupt
 	cider-jack-in
 	cider-load-buffer
 	cider-macroexpand-1
 	cider-switch-to-repl-buffer
+	cljr-extract-def
 	delete-indentation
 	endless/isearch-symbol-with-prefix
+	eval-expression
 	evil-insert
 	evil-normal-state
 	evil-normal-state
@@ -134,8 +145,11 @@
 	hydra-refactor/cljr-move-to-let
 	hydra-refactor/cljr-remove-unused-requires
 	hydra-refactor/nil
+	hydra/mc/mc/mark-previous-like-this
+	hydra/mc/nil
 	ido-find-file
 	ignore
+	mac-magnify-text-scale
 	magit-status
 	markdown-exdent-or-delete
 	mc/insert-character
@@ -143,6 +157,8 @@
 	mc/mark-dwim
 	mc/mark-next-like-this-repeat
 	mc/mark-previous-like-this-repeat
+	mc/vertical-align
+	mc/vertical-align-with-space
 	mouse-buffer-menu
 	mouse-drag-secondary
 	mouse-set-region
@@ -158,5 +174,6 @@
 	shell-command
 	smex
 	synth-delete-other-windows
+	what-cursor-position
 	yaml-electric-backspace
 	))

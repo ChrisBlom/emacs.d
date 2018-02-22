@@ -9,11 +9,15 @@
  ("M-h"       . backward-kill-word)
  ("C-z"       . nil)
 
+ ("M-p"       . backward-paragraph)
+ ("M-n"       . forward-paragraph)
+
  ("s-w"       . kill-current-unmodified-buffer)
  ("s-r"       . revert-buffer)
  ("s-v"       . yank)
  ("s-c"       . kill-ring-save)
  ("s-x"       . kill-region)
+ ("s-k"       . kill-this-buffer)
 
  ;; windows
  ("C-c w 3"   . synth-two-windows)
@@ -34,9 +38,13 @@
  ("C-x C-c"   . nil)
  ("C-x r q"   . kill-emacs)
  ("<prior>"   . previous-buffer)
+
  ("<next>"    . next-buffer)
  ("s-<prior>" . persp-prev)
  ("s-<next>"  . persp-next)
+
+ ("s-," . persp-prev)
+ ("s-."  . persp-next)
 
  ;;buffer
  ("C-x M-k" . delete-current-buffer-file)

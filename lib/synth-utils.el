@@ -276,7 +276,7 @@
       (kill-new filename)))))
 
 ;; from prelude
-(defun copy-file-name-to-clipboard (&optional arg)
+(defun copy-filename (&optional arg)
   "Copy the current buffer file name to the clipboard."
   (interactive "P")
   (if arg
@@ -287,6 +287,11 @@
 	(when filename
 	  (kill-new filename)
 	  (message "Copied buffer file name '%s' to the clipboard." filename)))))
+
+(defun copy-git-sha ()
+  "copy the short git sha the the clipboard"
+  (interactive)
+  (kill-new (substring (shell-command-to-string "git rev-parse HEAD") 0 7)))
 
 (defun sudo-edit (&optional arg)
   "Edit currently visited file as root.
@@ -299,7 +304,6 @@ buffer is not visiting a file."
       (find-file (concat "/sudo:root@localhost:"
                          (ido-read-file-name "Find file(as root): ")))
     (find-alternate-file (concat "/sudo:root@localhost:" buffer-file-name))))
-
 
 ;; From http://groups.google.com/group/gnu.emacs.help/browse_thread/thread/44728fda08f1ec8f?hl=en&tvc=2
 (defun make-repeatable-command (cmd)
@@ -324,6 +328,7 @@ and so on."
            (repeat nil)))
   (intern (concat (symbol-name cmd) "-repeat")))
 
+;; create directories before saving
 (add-hook 'before-save-hook
           (lambda ()
             (when buffer-file-name
