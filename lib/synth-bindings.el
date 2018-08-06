@@ -61,6 +61,8 @@
  ("C-c C-p" . eval-print-last-sexp)
  ("C-c C-r" . eval-region))
 
+(require 'cl)
+
 (defun my/window-selector (n)
   (lexical-let ((ln n))
     (lambda () (interactive)

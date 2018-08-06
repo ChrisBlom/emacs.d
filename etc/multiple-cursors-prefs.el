@@ -66,6 +66,8 @@
 	magit-discard-item
 	magit-stash-drop
 	mark-whole-buffer
+	markdown-cycle
+	markdown-outdent-or-delete
 	move-line-up
 	my/paredit-right
 	org-beginning-of-line
@@ -115,6 +117,7 @@
 (setq mc/cmds-to-run-once
       '(
 	c-electric-semi&comma
+	cider-debug-mode-send-reply
 	cider-doc
 	cider-eval-expression-at-point
 	cider-interrupt
@@ -148,6 +151,7 @@
 	hydra/mc/mc/mark-previous-like-this
 	hydra/mc/nil
 	ido-find-file
+	ido-recentf-open
 	ignore
 	mac-magnify-text-scale
 	magit-status
@@ -159,9 +163,11 @@
 	mc/mark-previous-like-this-repeat
 	mc/vertical-align
 	mc/vertical-align-with-space
+	mouse-appearance-menu
 	mouse-buffer-menu
 	mouse-drag-secondary
 	mouse-set-region
+	move-to-window-line-top-bottom
 	my/cider-cljs-refresh
 	next-buffer
 	next-buffer
