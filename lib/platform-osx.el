@@ -12,6 +12,16 @@
   (setq mac-function-modifier 'command)
   (setq mac-control-modifier 'control)
 
+  (defun open-in-iterm ()
+    (interactive)
+    (let* ((f (buffer-file-name))
+	   (d (when f
+		(or (and (f-dir? f) f)
+		    (f-parent f)))))
+      (when d
+	(shell-command
+	 (format "open -b com.googlecode.iterm2 %s" d)))))
+
   ;; Make cut and paste work with the OS X clipboard
   (defun live-copy-from-osx ()
     (interactive)

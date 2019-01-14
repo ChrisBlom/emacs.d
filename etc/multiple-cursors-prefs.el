@@ -91,6 +91,7 @@
 	paredit-doublequote
 	paredit-forward-barf-sexp
 	paredit-forward-delete
+	paredit-forward-down
 	paredit-forward-slurp-sexp
 	paredit-forward-up
 	paredit-join-sexps
@@ -105,6 +106,7 @@
 	paredit-splice-sexp-killing-forward
 	paredit-split-sexp
 	repeat
+	sgml-slash
 	sh-assignment
 	transpose-sexps
 	transpose-words
@@ -166,6 +168,7 @@
 	mouse-appearance-menu
 	mouse-buffer-menu
 	mouse-drag-secondary
+	mouse-select-window
 	mouse-set-region
 	move-to-window-line-top-bottom
 	my/cider-cljs-refresh

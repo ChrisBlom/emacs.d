@@ -142,7 +142,8 @@ Also bind `class' to ((class color) (min-colors 89))."
      `(show-paren-mismatch-face ((t (:foreground "#960050" :background "#1E0010"))))
      `(widget-inactive-face ((t (:background "#ff0000"))))
      ;;
-     `(eval-sexp-fu-flash ((t (:inverse-video t :foreground "#6e8b3d" :background "white" ))))
+
+;     `(eval-sexp-fu-flash ((t (:inverse-video t :foreground `(hsl 0.4 0.5 0.7) :background "white" ))))
      `(pulse-highlight-start-face ((t (:background ,(hsl 0.35 0.7 0.5)))))
      ;; Flyscheck
      `(flycheck-warning ((t (:underline (:style line :color "#FFAA20") :weight bold))))

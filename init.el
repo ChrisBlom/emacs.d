@@ -219,7 +219,7 @@
    ("s-}" . mc/unmark-next-like-this)
    )
   :config
-  (defvar mc--insert-character-char ?a)
+  (setq mc--insert-character-char ?a)
 
   (defun mc--insert-character-and-increase ()
     (interactive)
@@ -278,7 +278,7 @@
 	("M-q"       . live-paredit-reindent-defun)
 	("M-\\"      . live-paredit-delete-horizontal-space))
   :commands paredit-mode
-  :diminish "()"
+  :diminish ""
   :config
   (progn
     ;; TODO extract useful stuff
@@ -327,7 +327,7 @@
   ("C-M-f" . paxedit-next-symbol)
   ("C-M-n" . paxedit-previous-symbol )
   :commands paxedit-mode
-  :diminish "()")
+  :diminish "")
 
 (setq paxedit-sexp-delimiters
       '(?#
@@ -543,6 +543,9 @@
 	    (sml/setup)
 	    (setq sml/use-projectile-p 'before-prefixes)))
 
+(setq column-number-mode t)
+(display-time-mode 1)
+
 ;; show changes in fringe
 (use-package git-gutter
   :ensure t
@@ -563,6 +566,7 @@
   :config
   (progn
     (global-undo-tree-mode)
+    (setq undo-tree-visualizer-timestamps t)
     (setq undo-tree-auto-save-history nil)))
 
 ;; show argument lists in echo area
@@ -570,12 +574,10 @@
   :diminish ""
   :commands eldoc-mode
   :init
-  (progn
-    (add-hook 'emacs-lisp-mode-hook 'eldoc-mode)
-    (add-hook 'eval-expression-minibuffer-setup-hook 'eldoc-mode))
+  (add-hook 'emacs-lisp-mode-hook 'eldoc-mode)
+  (add-hook 'eval-expression-minibuffer-setup-hook 'eldoc-mode)
   :config
-  (progn
-    (setq eldoc-current-idle-delay 0.1)))
+  (setq eldoc-current-idle-delay 0.2))
 
 ;; navigation for elisp
 (use-package elisp-slime-nav
@@ -660,13 +662,11 @@
   :config
   (use-package company-restclient :ensure t))
 
-(use-package eval-pulse
-  :init
-  (setq eval-pulse-depth 4)
-  :diminish ""
-  :config
-  (progn
-    (eval-pulse-mode +1)))
+(use-package hideshow
+  :diminish "")
+
+(eval-after-load "hide-show"
+  (diminish 'hs-minor-mode))
 
 (use-package window-number
   :ensure t)
@@ -1563,12 +1563,6 @@ area is identical to that which is evaluated."
   ;; highlight current line
   (global-hl-line-mode -1)
 
-  (defun set-pulse ()
-    (interactive)
-    (setq eval-pulse-depth 1))
-
-  (set-pulse)
-
   (defun pulse-current-line ()
     (interactive)
     (pulse-momentary-highlight-one-line (point)))
@@ -1997,8 +1991,8 @@ open and unsaved."
    :map dired-mode-map
    ("C-c M-x" . my/dired-do-command)))
 
-;; (use-package auto-revert
-;;   :diminish "")
+
+(use-package autorevert :diminish "")
 
 (use-package swiper
   :ensure t
@@ -2373,3 +2367,89 @@ WARNING: this is a simple implementation. The chance of generating the same UUID
             'cider-format-buffer
             t
 	    t))
+(defun my/python-clear-shell ()
+  (interactive)
+  (let ((b (current-buffer)))
+    (python-shell-switch-to-shell)
+    (comint-clear-buffer)
+    (pop-to-buffer b)
+    ))
+
+(defun my/python-eval-buffer ()
+  (interactive)
+  (let ((b (current-buffer)))
+    (python-shell-switch-to-shell)
+    (comint-clear-buffer)
+    (pop-to-buffer b)
+    (python-shell-send-buffer)))
+
+
+
+;; (bind-keys
+;;  :map comint-mode-map
+;;  ("C-c C-o" . my/python-clear-shell)
+;;  ("C-c C-b" . comint-)
+;;  )
+
+(setq python-shell-interpreter "python3")
+
+(use-package jedi :ensure t
+  :pin melpa-stable
+  :bind (:map python-mode-map
+ ("C-c C-o" . my/python-clear-shell)
+ ("C-c C-k" . my/python-eval-buffer)
+ ("M-RET" . jedi:show-doc)))
+
+(use-package ranger :ensure t)
+
+
+;; mode line theme
+;; TODO move back to separate file
+
+(defun hsl (h s l)
+  (let ((rgb (color-hsl-to-rgb h s l)))
+    (apply 'color-rgb-to-hex rgb)))
+
+(defun lab (h s l)
+  (let ((rgb (color-lab-to-srgb h s l)))
+    (apply 'color-rgb-to-hex rgb)))
+
+
+(custom-theme-set-faces
+ 'synth
+ ;; smart-mode-line
+ `(mode-line-inactive ((t :foreground "gray60" :background ,(hsl 0.3 0.0 0.2) :inverse-video nil)))
+ `(mode-line     ((t :foreground "gray100" :background ,(hsl 0.55 0.3 0.2) :inverse-video nil)))
+ `(sml/global    ((t :foreground ,(hsl 0.5 0.1 0.5) :inverse-video nil)))
+ `(sml/modes     ((t :inherit sml/global :foreground ,(hsl 0.45 0.6 0.5))))
+ `(sml/filename  ((t :inherit sml/global :foreground ,(hsl 0.4 0.4 0.9) :weight bold)))
+ `(mode-line-buffer-id ((t :inherit sml/filename :foreground nil :background nil)))
+ `(sml/prefix    ((t :inherit sml/global :foreground ,(hsl 0.2 0.9 0.9))))
+ `(sml/git       ((t :inherit sml/global :foreground ,(hsl 0.5 0.6 0.7))))
+ `(sml/read-only ((t :inherit sml/not-modified :foreground "DeepSkyBlue")))
+
+ `(persp-selected-face ((t :foreground "ForestGreen" :inherit sml/filename :underline t)))
+ `(helm-candidate-number ((t :foreground nil :background nil :inherit sml/filename))))
+
+;; This causes the current time in the mode line to be displayed in
+ ;; `egoge-display-time-face' to make it stand out visually.
+ (setq display-time-string-forms
+       '((propertize (concat " " 24-hours ":" minutes " ")
+ 		    'face 'sml/prefix)))
+
+(setq-default mode-line-format
+	      (list "%e"
+		    mode-line-front-space
+		    mode-line-mule-info
+		    mode-line-client
+		    mode-line-modified
+		    mode-line-remote
+		    mode-line-frame-identification
+		    mode-line-buffer-identification
+		    `(vc-mode vc-mode)
+		    sml/pos-id-separator
+		    mode-line-position
+		    sml/pre-modes-separator
+		    mode-line-modes
+		    mode-line-misc-info
+		    mode-line-end-spaces))

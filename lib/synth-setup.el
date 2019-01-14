@@ -96,12 +96,11 @@
 (when (window-system)
   (set-default-font "Fira Code Light"))
 
-(set-face-attribute 'default nil :family "Fira Code Light" :height 100 :weight 'light :width 'extra-condensed)
-
-
 (defun use-firacode ()
   (interactive)
   (set-face-attribute 'default nil :family "Fira Code Light" :height 100 :weight 'light :width 'extra-condensed))
+
+(use-firacode)
 
 ;; enable ligatures
 (let ((alist '(;;(33 . ".\\(?:\\(?:==\\|!!\\)\\|[!=]\\)")
