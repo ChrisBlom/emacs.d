@@ -198,12 +198,21 @@
 ;;   ("q" nil "cancel")
 ;; )
 
+
+(defun my/mc/mark-all-like-this ()
+  "Find and mark all the parts of the buffer matching the currently active region"
+  (interactive)
+  (when (not (region-active-p))
+    (er/expand-region 1))
+  (mc/mark-all-like-this))
+
+
 (use-package multiple-cursors
   :ensure t
   :init (setq mc/list-file (f-join user-emacs-directory "etc" "multiple-cursors-prefs.el"))
   :bind
   (("C-c m h" . mc-hide-unmatched-lines-mode)
-   ("C-c m a" . mc/mark-all-like-this)
+   ("C-c m a" . my/mc/mark-all-like-this)
    ("C-c m v" . mc/vertical-align)
    ("C-c m SPC" . mc/vertical-align-with-space)
    ("C-c m d" . mc/mark-all-symbols-like-this-in-defun)
@@ -865,6 +874,20 @@
 			   (magit-get-push-remote)
 			   "url"))
 	       (magit-get-current-branch))))
+
+    (defun my/magit-visit-bitbucket-pull-request ()
+      "Visit the current branch's PR on BitBucket."
+      (interactive)
+      (browse-url
+       (format "https://bitbucket.org/%s/pull-requests/new/"
+	       (replace-regexp-in-string
+		"\\`.+bitbucket\\.org:\\(.+\\)\\.git\\'" "\\1"
+		(magit-get "remote"
+			   (magit-get-push-remote)
+			   "url"))
+	       ;(magit-get-current-branch)
+	       )))
+
 
     (defun my/magit-visit-circleci-url ()
       "Visit the current branch build status on CircleCI"
@@ -1548,7 +1571,7 @@ area is identical to that which is evaluated."
     (interactive)
     (cider--pprint-eval-form (cider-last-sexp))))
 
-(setq server-socket-dir "/tmp/emacs-socket")
+;(setq server-socket-dir "/tmp/emacs-socket")
 ;; start the server so clients can connect to it
 (require 'server)
 ;(server-force-stop)
@@ -1574,6 +1597,10 @@ area is identical to that which is evaluated."
     (set-face-attribute 'default nil
 			:family "Meslo LG S DZ" :height 110 :weight 'normal :width 'condensed))
 
+  (defun use-firacode ()
+    (interactive)
+    (set-face-attribute 'default nil
+			:family "Fira Code" :height 90 :weight 'normal :width 'condensed))
   (defun use-cousine ()
     (interactive)
     (set-face-attribute 'default nil
@@ -2015,13 +2042,13 @@ open and unsaved."
   :commands slime-mode
   :config (setq inferior-lisp-program "sbcl"))
 
-(use-package jdee
-  :ensure t
-  ;;:mode "\\.java$" jdee-mode
-  :commands jdee-mode
-  :config
-  (setq
-   jdee-server-dir (concat user-emacs-directory "lib/jdee")))
+;; (use-package jdee
+;;   :ensure t
+;;   ;;:mode "\\.java$" jdee-mode
+;;   :commands jdee-mode
+;;   :config
+;;   (setq
+;;    jdee-server-dir (concat user-emacs-directory "lib/jdee")))
 
 (use-package which-key :ensure t)
 
@@ -2335,16 +2362,6 @@ backup-directory-alist
   (set-face-attribute 'default nil :family "Fira Code Light" :height 300 :weight 'light :width 'extra-condensed)
   (set-frame-parameter nil 'fullscreen 'maximized))
 
-(defun hide ()
-  (interactive)
-  (hs-hide-all))
-
-(defun show ()
-  (interactive)
-  (hs-show-all))
-
-
-
 (defun insert-random-uuid ()
   "Insert a random UUID.
 Example of a UUID: 1df63142-a513-c850-31a3-535fc3520c3d
@@ -2367,6 +2384,7 @@ WARNING: this is a simple implementation. The chance of generating the same UUID
             'cider-format-buffer
             t
 	    t))
+
 (defun my/python-clear-shell ()
   (interactive)
   (let ((b (current-buffer)))
@@ -2383,8 +2401,6 @@ WARNING: this is a simple implementation. The chance of generating the same UUID
     (pop-to-buffer b)
     (python-shell-send-buffer)))
 
-
-
 ;; (bind-keys
 ;;  :map comint-mode-map
 ;;  ("C-c C-o" . my/python-clear-shell)
@@ -2400,8 +2416,14 @@ WARNING: this is a simple implementation. The chance of generating the same UUID
  ("C-c C-k" . my/python-eval-buffer)
  ("M-RET" . jedi:show-doc)))
 
-(use-package ranger :ensure t)
+(use-package ansible :ensure t)
+(use-package ansible-doc :ensure t)
+(use-package company-ansible :ensure t)
 
+(use-package hcl-mode :ensure t)
+(use-package terraform-mode :ensure t)
+(use-package git-gutter :ensure t)
+(use-package ranger :ensure t)
 
 ;; mode line theme
 ;; TODO move back to separate file
@@ -2453,3 +2475,5 @@ WARNING: this is a simple implementation. The chance of generating the same UUID
 		    mode-line-modes
 		    mode-line-misc-info
 		    mode-line-end-spaces))
+
+(use-package rainbow-mode :ensure t)

@@ -246,6 +246,33 @@
 			    (live-fontify-hex-colors))))
 
 
+(defun live-fontify-rgb-colors (limit)
+  (remove-overlays (point) limit 'fontify-rgb-colors t)
+  (while (re-search-forward (concat "\\(rgba(" srd "," srd  ","srd "," srd ")\\)") limit t)
+    (let ((ov (make-overlay (match-beginning 0)
+                            (match-end 0)))
+          (color (rgb (string-to-number (match-string 2))
+                      (string-to-number (match-string 3))
+                      (string-to-number (match-string 4))))
+          (contrast (if (< 0.3 (string-to-number (match-string 4)))
+                        "black" "white")))
+      (overlay-put ov 'face  (list :background color :foreground contrast
+                                   :box '(:line-width 1 :color contrast)))
+      (overlay-put ov 'fontify-rgb-colors t)
+      (overlay-put ov 'evaporate t)))
+  ;; return nil telling font-lock not to fontify anything from this
+  ;; function
+  nil)
+
+(defun live-fontify-rgb-colours-in-current-buffer ()
+  (interactive)
+  (font-lock-add-keywords nil
+                          '((live-fontify-rgb-colors)
+			    (live-fontify-hex-colors))))
+
+
+
+
 (defun live-fontify-hex-colors (limit)
   (remove-overlays (point) limit 'fontify-hex-colors t)
   (while (re-search-forward "\\(#[[:xdigit:]]\\{6\\}\\)" limit t)
