@@ -226,7 +226,7 @@
    ("s-[" . mc/mark-previous-like-this)
    ("s-{" . mc/unmark-previous-like-this)
    ("s-}" . mc/unmark-next-like-this)
-   )
+   ("C-M-]" . mc/mark-next-like-this))
   :config
   (setq mc--insert-character-char ?a)
 
@@ -243,6 +243,10 @@
      (mc/execute-command-for-fake-cursor #'mc--insert-character-and-increase cursor)))
 
   (key-chord-define global-map "[]" #'mc/mark-all-like-this-dwim))
+
+(bind-key "C-c m a" #'my/mc/mark-all-like-this)
+
+
 
 (use-package change-inner
   :ensure t
@@ -282,8 +286,6 @@
 	("M-T"       . transpose-sexps)
 	("M-P"       . live-paredit-previous-top-level-form)
 	("M-N"       . live-paredit-next-top-level-form)
-	("C-M-f"     . nil)
-	("C-M-b"     . nil)
 	("M-q"       . live-paredit-reindent-defun)
 	("M-\\"      . live-paredit-delete-horizontal-space))
   :commands paredit-mode
@@ -311,8 +313,6 @@
 	      ('error (paredit-forward-up)))
 	    retval)))
 
-
-
     (defun my/paredit-right ()
       (interactive)
       (condition-case ex
@@ -323,28 +323,6 @@
 
 
     ))
-
-(use-package paxedit
-  :ensure t
-  :init
-  (progn
-    ;(add-hook 'lisp-mode-hook       (lambda () (paredit-mode +1)))
-    ;(add-hook 'emacs-lisp-mode-hook (lambda () (paredit-mode +1)))
-    ;(add-hook 'scheme-mode-hook     (lambda () (paredit-mode +1)))
-    )
-  :bind
-  ("C-M-f" . paxedit-next-symbol)
-  ("C-M-n" . paxedit-previous-symbol )
-  :commands paxedit-mode
-  :diminish "")
-
-(setq paxedit-sexp-delimiters
-      '(?#
-	?,
-	?@
-	?~
-	?'
-	?`))
 
 (use-package aggressive-indent
   :ensure t
@@ -413,10 +391,16 @@
 
 (use-package helm-ag :ensure t)
 
+(defun my/yank-pop-or-show-kill-ring ()
+  (interactive)
+  (condition-case nil
+      (yank-pop)
+    (error (helm-show-kill-ring))))
+
 ;; selection framework
 (use-package helm
   :ensure t
-  :bind (("M-y" . helm-show-kill-ring)
+  :bind (("M-y" . my/yank-pop-or-show-kill-ring)
 	 ("C-x C-b" . helm-buffers-list)
 	 ("C-c h o" . helm-occur)
 	 ("C-c h f" . helm-find-files)
@@ -575,7 +559,7 @@
   :config
   (progn
     (global-undo-tree-mode)
-    (setq undo-tree-visualizer-timestamps t)
+    (setq undo-tree-visualizer-timestamps nil)
     (setq undo-tree-auto-save-history nil)))
 
 ;; show argument lists in echo area
