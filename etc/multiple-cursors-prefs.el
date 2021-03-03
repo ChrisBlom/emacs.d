@@ -9,11 +9,15 @@
 	align-cljlet
 	backward-delete-char
 	backward-kill-sentence
+	backward-sentence
 	backward-sexp
 	beginning-of-buffer
 	browse-kill-ring
+	c-beginning-of-statement
+	c-electric-colon
 	c-electric-delete-forward
 	c-electric-paren
+	c-electric-semi&comma
 	c-electric-slash
 	c-electric-star
 	c-indent-line-or-region
@@ -55,6 +59,9 @@
 	hydra-refactor/cljr-thread
 	hydra-refactor/cljr-thread-first-all
 	indent-for-tab-command
+	indent-region
+	insert-random-uuid
+	ispell-minor-check
 	kill-region
 	kill-region-or-backward
 	kill-sentence
@@ -69,7 +76,11 @@
 	markdown-cycle
 	markdown-outdent-or-delete
 	move-line-up
+	my-decrement-number-at-point
+	my-increment-number-at-point
 	my/paredit-right
+	my/yank-pop-or-show-kill-ring
+	nxml-electric-slash
 	org-beginning-of-line
 	org-delete-char
 	org-force-self-insert
@@ -82,6 +93,7 @@
 	org-transpose-element
 	org-yank
 	paredit-backslash
+	paredit-backward-down
 	paredit-backward-kill-word
 	paredit-backward-slurp-sexp
 	paredit-backward-up
@@ -110,7 +122,9 @@
 	sh-assignment
 	transpose-sexps
 	transpose-words
+	wdired-downcase-word
 	wdired-finish-edit
+	yaml-electric-backspace
 	yaml-electric-dash-and-dot
 	yas-expand
 	yas-expand-from-trigger-key
@@ -128,22 +142,22 @@
 	cider-macroexpand-1
 	cider-switch-to-repl-buffer
 	cljr-extract-def
-	delete-indentation
+	comment-region
 	endless/isearch-symbol-with-prefix
 	eval-expression
-	evil-insert
-	evil-normal-state
 	evil-normal-state
 	fancy-narrow-to-defun
 	fancy-widen
 	geiser-compile-current-buffer
 	geiser-mode-switch-to-repl
 	goto-last-change
+	handle-switch-frame
 	haskell-interactive-mode-clear
 	haskell-interactive-switch
 	haskell-process-load-file
 	helm-ag--edit-commit
 	helm-company
+	helm-occur
 	hydra--negative-argument
 	hydra-refactor/body
 	hydra-refactor/cljr-clean-ns
@@ -172,6 +186,7 @@
 	mouse-set-region
 	move-to-window-line-top-bottom
 	my/cider-cljs-refresh
+	my/mc/mark-all-like-this
 	next-buffer
 	next-buffer
 	org-end-of-line
@@ -179,10 +194,10 @@
 	persp-prev
 	previous-buffer
 	projectile-find-file-dwim
+	projectile-switch-project
 	projectile-toggle-between-implementation-and-test
+	save-buffers-kill-terminal
 	shell-command
 	smex
 	synth-delete-other-windows
-	what-cursor-position
-	yaml-electric-backspace
 	))
