@@ -65,20 +65,15 @@
 (put 'narrow-to-region 'disabled nil)
 
 ;; prefer horizontal split splits:
-(setq split-height-threshold 80)
-(setq split-width-threshold 120)
-
 (setq split-height-threshold nil)
 (setq split-width-threshold 0)
 
-(setq initial-scratch-message ";; Loaded emacs")
+;; empty initial scratch buffer
+(setq initial-scratch-message "")
 
-(setq dired-dwim-target t)
-
-;;
 (defalias 'yes-or-no-p 'y-or-n-p)
 
-
+(setq dired-dwim-target t)
 (setq dired-listing-switches "-alh")
 
 ;; remove trailing whitespace on save
@@ -87,11 +82,7 @@
 ;; don't create .#filename lockfiles
 (setq create-lockfiles nil)
 
-(when (window-system)
-  (set-default-font "Fira Code Light"))
+;;(when (window-system)
+  ;;(set-default-font "Fira Code Light"))
 
-(defun use-firacode ()
-  (interactive)
-  (set-face-attribute 'default nil :family "Fira Code Light" :height 100 :weight 'light :width 'extra-condensed))
-
-(use-firacode)
+(hl-line-mode +1)

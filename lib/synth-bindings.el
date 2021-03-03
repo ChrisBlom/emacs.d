@@ -2,9 +2,14 @@
 
 (require 'synth-utils)
 
+(defun exit-client  (&optional arg)
+  (interactive "P")
+  (save-current-buffer)
+  (save-some-buffers arg t)
+  (delete-frame))
+
 ;; global bindings
 (bind-keys
-
  ("C-h"       . backward-delete-char)
  ("M-h"       . backward-kill-word)
  ("C-z"       . nil)
@@ -25,7 +30,6 @@
  ("C-c w s"   . toggle-window-split)
  ("C-c w b"   . winner-undo)
  ("C-c w f"   . winner-redo)
- ("C-c k 2"   . (lambda () (interactive) (with-current-buffer-window (kill-buffer))))
  ("C-x C-k"   . kill-current-unmodified-buffer)
  ("C-<prior>" . winner-undo)
  ("C-<next>"  . winner-redo)
@@ -35,7 +39,7 @@
  ("M-SPC"     . live-delete-whitespace-except-one)
  ("C-S-j"     . one-newline)
  ("M-'"       . repeat)
- ("C-x C-c"   . nil)
+ ("C-x C-c"   . save-buffers-kill-terminal)
  ("C-x r q"   . kill-emacs)
  ("<prior>"   . previous-buffer)
 
@@ -82,3 +86,15 @@
 (key-chord-define-global "8i" (my/window-selector 8))
 (key-chord-define-global "9o" (my/window-selector 9))
 (key-chord-define-global "0p" (my/window-selector 10))
+
+;; Fast window selection
+(progn
+  (key-chord-define-global " 1" (my/window-selector 1))
+  (key-chord-define-global " 2" (my/window-selector 2))
+  (key-chord-define-global " 3" (my/window-selector 3))
+  (key-chord-define-global " 4" (my/window-selector 4))
+  (key-chord-define-global " 5" (my/window-selector 5))
+  (key-chord-define-global " 6" (my/window-selector 6))
+  (key-chord-define-global " 7" (my/window-selector 7))
+  (key-chord-define-global " 8" (my/window-selector 8))
+  (key-chord-define-global " 9" (my/window-selector 9)))

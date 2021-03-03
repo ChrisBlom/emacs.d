@@ -122,10 +122,6 @@
 (setq auto-save-file-name-transforms
       `((".*" ,temporary-file-directory t)))
 
-(defun gitx ()
-  (interactive)
-  (shell-command "gitx"))
-
 (require 'cider)
 
 (defun flash (o hue)
