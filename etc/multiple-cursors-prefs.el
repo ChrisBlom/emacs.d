@@ -87,6 +87,7 @@
 	org-kill-line
 	org-metaleft
 	org-metaright
+	org-return-and-maybe-indent
 	org-return-indent
 	org-self-insert-command
 	org-todo
@@ -141,6 +142,7 @@
 	cider-load-buffer
 	cider-macroexpand-1
 	cider-switch-to-repl-buffer
+	cider-test-run-ns-tests
 	cljr-extract-def
 	comment-region
 	endless/isearch-symbol-with-prefix

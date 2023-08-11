@@ -341,6 +341,17 @@
 ;;   :config
 ;;   (persp-mode +1))
 
+
+(defun my/projectile-test-suffix (project-type)
+  (if (eq project-type 'lein-midje)
+      "_test"
+    (projectile-test-suffix project-type)))
+
+(defun my/projectile-test-prefix (project-type)
+  (if (eq project-type 'lein-midje)
+      nil
+    (projectile-test-prefix project-type)))
+
 ;; project oriented commands
 (use-package projectile
   :ensure t
@@ -354,22 +365,9 @@
   :config
   (progn
 
-    (defun my/projectile-test-suffix (project-type)
-      (if (eq project-type 'lein-midje)
-	  "_test"
-	(projectile-test-suffix project-type)))
-
-    (defun my/projectile-test-prefix (project-type)
-      (if (eq project-type 'lein-midje)
-	  nil
-	(projectile-test-prefix project-type)))
-
     (custom-set-variables
      '(projectile-test-prefix-function  #'my/projectile-test-prefix)
      '(projectile-test-suffix-function  #'my/projectile-test-suffix))
-
-    ;; to avoid make taking precedence over lein-midje
-    (remhash 'make projectile-project-types)
 
     (projectile-global-mode t)
     (setq projectile-mode-line-lighter "")
@@ -849,7 +847,7 @@
 
 (use-package magit
   :ensure t
-  :defer 1
+  :defer t
   :pin melpa-stable
   :bind (("C-x m" . magit-status)
 	 ("C-c g b" . magit-blame)
@@ -992,6 +990,8 @@
    ("C-c c n"     . flycheck-next-error)
    ("C-c c p"     . flycheck-previous-error)))
 
+(add-hook 'json-mode-hook #'flycheck-mode)
+
 (use-package evil
   :ensure t
   :commands evil-mode
@@ -1103,6 +1103,7 @@
     :config
     (require 'flycheck-clj-kondo)
     (add-hook 'clojure-mode-hook (lambda ()
+				   (flycheck-mode +1)
 				   (yas-minor-mode +1)
 				   (yas-load-directory
 				    (f-join user-emacs-directory "etc" "snippets" "clojure-mode" ".")
@@ -1343,7 +1344,7 @@
 		(auto-highlight-symbol-mode +1)
 		(yas-minor-mode +1)
 		(setq buffer-save-without-query t)
-		(clj-refactor-mode +1)
+;		(clj-refactor-mode +1)
 		(prettify-symbols-mode +1)))
     :config
     (setq cider-prefer-local-resources t
@@ -1443,97 +1444,100 @@ area is identical to that which is evaluated."
 
   (use-package cider-eval-sexp-fu)
 
-  (use-package clj-refactor
-    :ensure t
-    :pin melpa-stable
-					; :after cider
-    :diminish ""
-    :bind (:map clojure-mode-map
-		("C->"     . cljr-cycle-coll)
-		("C-."     . cljr-thread)
-		("C-,"     . cljr-unwind))
-    :config
-    (progn
-      (bind-keys :map clj-refactor-map
-		 :prefix "C-c r"
-		 :prefix-map cljr
-		 ("m"   . cljr-move-to-let)
-		 ("l"   . cljr-introduce-let)
-		 ("e f" . cljr-extract-function)
-		 ("e d" . cljr-extract-def)
-		 ("e c" . cljr-extract-constant)
-		 ("d k" . cljr-destructure-keys)
-		 ("t"   . cljr-thread)
+  ;; (use-package clj-refactor
+  ;;   :ensure t
+  ;;   :pin melpa-stable
+  ;; 					; :after cider
+  ;;   :diminish ""
+  ;;   :bind (:map clojure-mode-map
+  ;; 		("C->"     . cljr-cycle-coll)
+  ;; 		("C-."     . cljr-thread)
+  ;; 		("C-,"     . cljr-unwind))
+  ;;   :config
+  ;;   (progn
+  ;;     (bind-keys :map clj-refactor-map
+  ;; 		 :prefix "C-c r"
+  ;; 		 :prefix-map cljr
+  ;; 		 ("m"   . cljr-move-to-let)
+  ;; 		 ("l"   . cljr-introduce-let)
+  ;; 		 ("e f" . cljr-extract-function)
+  ;; 		 ("e d" . cljr-extract-def)
+  ;; 		 ("e c" . cljr-extract-constant)
+  ;; 		 ("d k" . cljr-destructure-keys)
+  ;; 		 ("t"   . cljr-thread)
 
-		 ("u"   . cljr-unwind)
-		 ("n s" . cljr-sort-ns)
-		 ("n c" . cljr-clean-ns)
-		 ("s"   . cljr-rename-symbol)
-		 ("r"   . cljr-add-require-to-ns)
-		 ("i"   . cljr-add-import-to-ns)
+  ;; 		 ("u"   . cljr-unwind)
+  ;; 		 ("n s" . cljr-sort-ns)
+  ;; 		 ("n c" . cljr-clean-ns)
+  ;; 		 ("s"   . cljr-rename-symbol)
+  ;; 		 ("r"   . cljr-add-require-to-ns)
+  ;; 		 ("i"   . cljr-add-import-to-ns)
 
-		 ("d a"   . cljr-add-project-dependency)
-		 ("d h"   . cljr-hotload-dependencies))
+  ;; 		 ("d a"   . cljr-add-project-dependency)
+  ;; 		 ("d h"   . cljr-hotload-dependencies))
 
-      (setq cljr-midje-test-declaration "[midje.sweet :refer :all]")
-      ;; monkey patch to refer all
-      (defun cljr--add-test-declarations ()
-	(save-excursion
-	  (let* ((ns (clojure-find-ns))
-		 (source-ns (cljr--find-source-ns-of-test-ns ns (buffer-file-name))))
-	    (cljr--insert-in-ns ":require")
-	    (when source-ns
-	      (insert "[" source-ns " :refer :all]"))
-	    (cljr--insert-in-ns ":require")
-	    (insert (cond
-		     ((cljr--project-depends-on-p "midje")
-		      cljr-midje-test-declaration)
-		     ((cljr--project-depends-on-p "expectations")
-		      cljr-expectations-test-declaration)
-		     ((cljr--cljc-file-p)
-		      cljr-cljc-clojure-test-declaration)
-		     (t cljr-clojure-test-declaration))))
-	  (indent-region (point-min) (point-max))))
+  ;;     (setq cljr-midje-test-declaration "[midje.sweet :refer :all]")
+  ;;     ;; monkey patch to refer all
+  ;;     (defun cljr--add-test-declarations ()
+  ;; 	(save-excursion
+  ;; 	  (let* ((ns (clojure-find-ns))
+  ;; 		 (source-ns (cljr--find-source-ns-of-test-ns ns (buffer-file-name))))
+  ;; 	    (cljr--insert-in-ns ":require")
+  ;; 	    (when source-ns
+  ;; 	      (insert "[" source-ns " :refer :all]"))
+  ;; 	    (cljr--insert-in-ns ":require")
+  ;; 	    (insert (cond
+  ;; 		     ((cljr--project-depends-on-p "midje")
+  ;; 		      cljr-midje-test-declaration)
+  ;; 		     ((cljr--project-depends-on-p "expectations")
+  ;; 		      cljr-expectations-test-declaration)
+  ;; 		     ((cljr--cljc-file-p)
+  ;; 		      cljr-cljc-clojure-test-declaration)
+  ;; 		     (t cljr-clojure-test-declaration))))
+  ;; 	  (indent-region (point-min) (point-max))))
 
-      (setq cljr-magic-require-namespaces
-	    (-distinct (-concat cljr-magic-require-namespaces
-				'(("component" . "com.stuartsierra.component")
-				  ("s" . "schema.core")
-				  ("z" . "clojure.zip")
-				  ("d" . "datomic.api")
-				  ("edn" . "clojure.edn")
-				  ("aero" . "aero.core")
-				  ("a" . "clojure.core.async")
-				  ("sh" . "clojure.java.shell")
-				  ("log" . "taoensso.timbre")
-				  ("json" . "cheshire.core")
-				  ("p" . "plumbing.core")
-				  ("s3" . "amazonica.aws.s3")
-				  ("rum" . "rum.core")
-				  ))))
-      ;; override to use my preferred format
-      (defun cljr--insert-in-ns (type)
-	(cljr--goto-ns)
-	(if (cljr--search-forward-within-sexp (concat "(" type))
-	    (if (looking-at " *)")
-		(progn
-		  (search-backward "(")
-		  (forward-list 1)
-		  (forward-char -1)
-		  (insert "\n")) ;; <- newline instead of space
-	      (search-backward "(")
-	      (forward-list 1)
-	      (forward-char -1)
-	      (newline-and-indent))
-	  (forward-list 1)
-	  (forward-char -1)
-	  (newline-and-indent)
-	  (insert "(" type " )")
-	  (forward-char -1)))
+  ;;     (setq cljr-magic-require-namespaces
+  ;; 	    (-distinct (-concat cljr-magic-require-namespaces
+  ;; 				'(("component" . "com.stuartsierra.component")
+  ;; 				  ("s" . "schema.core")
+  ;; 				  ("z" . "clojure.zip")
+  ;; 				  ("d" . "datomic.api")
+  ;; 				  ("edn" . "clojure.edn")
+  ;; 				  ("aero" . "aero.core")
+  ;; 				  ("a" . "clojure.core.async")
+  ;; 				  ("sh" . "clojure.java.shell")
+  ;; 				  ("log" . "taoensso.timbre")
+  ;; 				  ("json" . "cheshire.core")
+  ;; 				  ("p" . "plumbing.core")
+  ;; 				  ("s3" . "amazonica.aws.s3")
+  ;; 				  ("rum" . "rum.core")
+  ;; 				  ))))
+  ;;     ;; override to use my preferred format
+  ;;     (defun cljr--insert-in-ns (type)
+  ;; 	(cljr--goto-ns)
+  ;; 	(if (cljr--search-forward-within-sexp (concat "(" type))
+  ;; 	    (if (looking-at " *)")
+  ;; 		(progn
+  ;; 		  (search-backward "(")
+  ;; 		  (forward-list 1)
+  ;; 		  (forward-char -1)
+  ;; 		  (insert "\n")) ;; <- newline instead of space
+  ;; 	      (search-backward "(")
+  ;; 	      (forward-list 1)
+  ;; 	      (forward-char -1)
+  ;; 	      (newline-and-indent))
+  ;; 	  (forward-list 1)
+  ;; 	  (forward-char -1)
+  ;; 	  (newline-and-indent)
+  ;; 	  (insert "(" type " )")
+  ;; 	  (forward-char -1)))
 
-      (bind-keys
-       :map clj-refactor-map
-       ("C-'" . hydra-refactor/body)))))
+  ;;     (bind-keys
+  ;;      :map clj-refactor-map
+  ;;      ("C-'" . hydra-refactor/body))))
+
+
+  )
 
 (section cosmetic
   ;; highlight current line
@@ -2045,7 +2049,7 @@ open and unsaved."
 
 (use-package glsl-mode :ensure t)
 
-(use-package rust-mode :ensure t)
+
 
 (use-package string-inflection :ensure t
   :bind
@@ -2173,7 +2177,7 @@ backup-directory-alist
  '(haskell-process-log t)
  '(haskell-process-suggest-remove-import-lines t)
  '(package-selected-packages
-   '(lsp-mode clojure-mode-extra-font-locking ztree zoom-window window-number which-key visible-mark use-package undo-tree terraform-mode string-inflection sr-speedbar smooth-scrolling smex smart-mode-line slime skewer-mode rust-mode ranger rainbow-mode rainbow-delimiters poly-ansible paxedit password-generator paradox nav multiple-cursors magit lsp-ui lsp-treemacs logstash-conf key-chord json-mode jq-mode jedi javap-mode inflections inf-clojure indent-guide image+ idomenu ido-vertical-mode ido-completing-read+ highlight-stages highlight-quoted highlight-parentheses highlight-numbers highlight-indentation highlight-indent-guides highlight-defined highlight-blocks highlight helm-rg helm-projectile helm-descbinds helm-company helm-ag graphql goto-last-change go-mode glsl-mode git-timemachine git-link git-gutter geiser flycheck-joker flycheck-clj-kondo flx-ido fish-mode fancy-narrow evil-lisp-state esup ensime elisp-slime-nav edn edit-server drag-stuff dockerfile-mode diminish deadgrep dante csv-mode counsel company-restclient company-quickhelp company-ghci company-flx company-ansible clojure-snippets circe cider-eval-sexp-fu cider change-inner buffer-move browse-url-dwim browse-at-remote auto-highlight-symbol align-cljlet aggressive-indent ag))
+   '(kotlin-mode elpy mediawiki iedit flycheck-rust erlang lsp-mode clojure-mode-extra-font-locking ztree zoom-window window-number which-key visible-mark use-package undo-tree terraform-mode string-inflection sr-speedbar smooth-scrolling smex smart-mode-line slime skewer-mode rust-mode ranger rainbow-mode rainbow-delimiters poly-ansible paxedit password-generator paradox nav multiple-cursors magit lsp-ui lsp-treemacs key-chord json-mode jq-mode jedi javap-mode inflections inf-clojure indent-guide image+ idomenu ido-vertical-mode ido-completing-read+ highlight-stages highlight-quoted highlight-parentheses highlight-numbers highlight-indentation highlight-indent-guides highlight-defined highlight-blocks highlight helm-rg helm-projectile helm-descbinds helm-company helm-ag graphql goto-last-change go-mode glsl-mode git-timemachine git-link git-gutter geiser flycheck-joker flycheck-clj-kondo flx-ido fish-mode fancy-narrow evil-lisp-state esup ensime elisp-slime-nav edn edit-server drag-stuff dockerfile-mode diminish deadgrep dante csv-mode counsel company-restclient company-quickhelp company-ghci company-flx company-ansible clojure-snippets circe cider-eval-sexp-fu cider change-inner buffer-move browse-url-dwim browse-at-remote auto-highlight-symbol align-cljlet) aggressive-indent ag)
  '(paradox-github-token t)
  '(projectile-test-prefix-function #'my/projectile-test-prefix)
  '(projectile-test-suffix-function #'my/projectile-test-suffix))
@@ -2418,32 +2422,32 @@ With the prefix argument, prompt for all these parameters."
 (use-package jq-mode :ensure t)
 
 (use-package lsp-mode
-;  :pin  melpa-stable
+  :ensure t
   :init
   ;; set prefix for lsp-command-keymap (few alternatives - "C-l", "C-c l")
   (setq lsp-keymap-prefix "C-c l")
   :hook (;; replace XXX-mode with concrete major-mode(e. g. python-mode)
          ;; if you want which-key integration
          (lsp-mode . lsp-enable-which-key-integration))
-;  :commands lsp
+  :commands lsp
   )
+
+
 
 (use-package rainbow-mode :ensure t)
 
-(use-package logstash-conf)
-(setq logstash-indent 2)
-
 
 ;; optionally
-;(use-package lsp-ui :ensure t)
+(use-package lsp-ui
+  :ensure t)
 ;; if you are helm user
 ;;(use-package helm-lsp :commands helm-lsp-workspace-symbol)
 ;;(use-package lsp-treemacs :ensure t)
 
+(setq lsp-ui-doc-position 'bottom)
 
 (setq lsp-clojure-custom-server-command '("bash" "-c" "/home/chris/bin/clojure-lsp"))
 (setq lsp-lens-enable nil)
-
 
 (setq gc-cons-threshold (* 100 1024 1024)
       read-process-output-max (* 1024 1024)
@@ -2453,6 +2457,34 @@ With the prefix argument, prompt for all these parameters."
       ; lsp-enable-completion-at-point nil ; uncomment to use cider completion instead of lsp
       )
 
+(defun rust-save-and-run ()
+  (interactive)
+  (save-buffer)
+  (rust-run))
+
+(use-package rust-mode
+  :ensure t
+  :bind
+  (:map rust-mode-map
+	("C-c C-k"  . rust-save-and-run)))
+
+
+(use-package iedit
+  :ensure t)
+
+(setq rust-format-on-save t)
+
+; (lsp-rust-server)
+
+(add-hook 'rust-mode
+	  (lambda ()
+	    (yas-minor-mode +1)
+	    (lsp-mode)
+	    (lsp-ui-mode)))
+
+(bind-key "C-x M-e"
+	  'eval-and-replace
+	  lisp-interaction-mode-map)
 
 
   ;; start the server so clients can connect to it
@@ -2464,3 +2496,114 @@ With the prefix argument, prompt for all these parameters."
       (server-start)
       (message "Started server"))
   (message "Server already running"))
+
+(use-package kotlin-mode
+  :pin melpa)
+
+(use-package flycheck-rust
+  :pin melpa-stable
+  :ensure t)
+
+(with-eval-after-load 'rust-mode
+  (add-hook 'flycheck-mode-hook #'flycheck-rust-setup))
+
+
+(defun git-prompt-branch-name ()
+  (interactive)
+  "Get current git branch name"
+  (shell-command
+   (with-temp-buffer
+     (apply #'process-file "git" nil (list t nil) nil '("symbolic-ref" "HEAD" "--short"))
+     (unless (bobp)
+       (goto-char (point-min))
+       (buffer-substring-no-properties (point) (line-end-position))))))
+
+
+;; (use-package -haskell
+;;   :ensure t
+
+;;  :config
+(setq lsp-haskell-server-path "/home/chris/.ghcup/bin/haskell-language-server-wrapper-1.6.1.0")
+
+;;(setf lsp-haskell-server-path "/home/chris/.ghcup/bin/haskell-language-server-wrapper")
+
+;; (use-package hask :ensure t)
+
+(add-hook 'haskell-mode-hook #'lsp)
+(add-hook 'haskell-literate-mode-hook #'lsp)
+
+
+(use-package lsp-haskell :ensure t)
+
+
+(defun set-exec-path-from-shell-PATH ()
+  "Set up Emacs' `exec-path' and PATH environment variable to match
+that used by the user's shell.
+
+This is particularly useful under Mac OS X and macOS, where GUI
+apps are not started from a shell."
+  (interactive)
+  (let ((path-from-shell
+	 (s-concat (replace-regexp-in-string
+		    "[ \t\n]*$" "" (shell-command-to-string
+				    "/bin/fish -c 'echo $PATH'"
+				    ))
+		   " /bin"
+		   )))
+
+
+    (setenv "PATH" (s-join ":" (split-string path-from-shell " ")))
+    (setq exec-path (-concat (split-string path-from-shell path-separator) '("/usr/bin" "/bin" )) )
+    ))
+
+
+exec-path
+(getenv "PATH")
+
+;; (set-exec-path-from-shell-PATH)
+
+
+(executable-find "ping")
+(executable-find "ghc")
+(executable-find "stack")
+(executable-find "cabal")
+(executable-find "frink")
+
+
+(use-package kotlin-mode :ensure t)
+
+
+;; variant: show commit hash first
+(defun magit-insert-push-branch-header ()
+  "Insert a header line about the branch the current branch is pushed to."
+  (when-let ((branch (magit-get-current-branch))
+             (target (magit-get-push-branch branch)))
+    (magit-insert-section (branch target)
+      (insert (format "%-10s" "Push: "))
+      (insert
+       (if (magit-rev-verify target)
+
+           (concat
+	    (and magit-status-show-hashes-in-headers
+                        (concat (propertize (magit-rev-format "%h" target)
+                                            'font-lock-face 'magit-hash)
+                                " "))
+	    target " "
+
+                   (funcall magit-log-format-message-function target
+                            (funcall magit-log-format-message-function nil
+                                     (or (magit-rev-format "%s" target)
+                                         "(no commit message)"))))
+
+	 (let ((remote (magit-get-push-remote branch)))
+           (if (magit-remote-p remote)
+               (concat target
+                       (propertize " does not exist"
+                                   'font-lock-face 'font-lock-warning-face))
+             (concat remote
+                     (propertize " remote does not exist"
+                                 'font-lock-face 'font-lock-warning-face))))))
+      (insert ?\n))))
+
+
+(use-package kubernetes)

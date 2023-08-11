@@ -6,10 +6,10 @@
   `())
 
 (setq synth-colors-alist
-      `( (synth-bg          . ,(hsl 2.4 0.2 0.1))
+      `( (synth-bg          . ,(hsl 0.0 0.1 0.1))
          (synth-fg          . ,(hsl 0.1 0.2 0.9))
          (paren-sat         . 0.25)
-	 (paren-lum         . 0.4)
+	 (paren-lum         . 0.5)
          (synth-pale-yellow . ,(hsl 0.14 0.7 0.7))))
 
 (defmacro with-synth-color-variables (&rest body)
@@ -42,12 +42,14 @@ Also bind `class' to ((class color) (min-colors 89))."
      `(magit-section-title ((t (:bold nil :underline t :background ,(hsl 0.1 0.1 0.3)))))
      `(magit-hash ((t (:bold t :underline nil :foreground ,(hsl 0.1 0.1 0.7)))))
 
+     `(magit-hash ((t (:bold t :underline nil :foreground ,(hsl 0.1 0.1 0.7)))))
+
      `(magit-blame-heading ((t (:bold nil :underline nil :background ,(hsl 0.1 0.1 0.2)
 				      :foreground ,(hsl 0.1 0.5 0.5)
 				      :slant italic
 				      ))))
 
-     ;`(magit-item-highlight ((t (:background ,(hsl 0.1 0.1 0.23)))))
+
 
 
 
