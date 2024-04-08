@@ -12,6 +12,7 @@
 	backward-sentence
 	backward-sexp
 	beginning-of-buffer
+	beginning-of-defun
 	browse-kill-ring
 	c-beginning-of-statement
 	c-electric-colon
@@ -92,6 +93,7 @@
 	org-todo
 	org-transpose-element
 	org-yank
+	paredit-C-j
 	paredit-backslash
 	paredit-backward-down
 	paredit-backward-kill-word
@@ -100,6 +102,7 @@
 	paredit-close-round
 	paredit-close-square
 	paredit-comment-dwim
+	paredit-delete-char
 	paredit-doublequote
 	paredit-forward-barf-sexp
 	paredit-forward-delete
@@ -117,6 +120,7 @@
 	paredit-splice-sexp-killing-backward
 	paredit-splice-sexp-killing-forward
 	paredit-split-sexp
+	pixel-scroll-precision
 	repeat
 	sgml-slash
 	sh-assignment
@@ -169,6 +173,8 @@
 	ido-find-file
 	ido-recentf-open
 	ignore
+	lsp
+	lsp-ui-doc--handle-mouse-movement
 	mac-magnify-text-scale
 	magit-status
 	markdown-exdent-or-delete
@@ -199,5 +205,7 @@
 	save-buffers-kill-terminal
 	shell-command
 	smex
+	superword-mode
 	synth-delete-other-windows
+	xref-go-back
 	))

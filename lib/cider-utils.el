@@ -3,10 +3,23 @@
 
 (defun my/cider-dot ()
   (interactive)
-  (cider-interactive-eval (format "(spit \"/tmp/cider.dot\" %s)"
-				  (apply #'buffer-substring-no-properties (cider-last-sexp 'bounds))))
+  (f-write-text (apply #'buffer-substring-no-properties (cider-last-sexp 'bounds))
+		'utf-8
+		"/tmp/cider.dot")
   (call-process-shell-command "dot -Tsvg -O /tmp/cider.dot")
-					;(my/display-image-inline "*dot*" "/tmp/cider.dot.png")
+				;(my/display-image-inline "*dot*" "/tmp/cider.dot.png")
+  (call-process-shell-command "open /tmp/cider.dot.svg"))
+
+
+(defun my/cider-show-dot ()
+  (interactive)
+
+
+  (cider-interactive-eval (format "(.getAbsolutePath (io/file %s))" (cider-eval-last-sexp))
+			  (lambda (x) (setq foo x)))
+
+  (call-process-shell-command "dot -Tsvg -O /tmp/cider.dot")
+				;(my/display-image-inline "*dot*" "/tmp/cider.dot.png")
   (call-process-shell-command "open /tmp/cider.dot.svg"))
 
 (defun cider-clean-restart (&optional prompt-project)
@@ -158,7 +171,7 @@ If invoked with a PREFIX argument, print the result in the current buffer."
 
 (defun my/cider-clear-namespace ()
   (interactive)
-  (message "Cleared: %s" (cider-interactive-eval "(./nc)")))
+  (message "Cleared: %s" (cider-interactive-eval "(-/nc)")))
 
 (defun my/cider-repl-clear-buffer ()
   "clear the relevant REPL buffer"

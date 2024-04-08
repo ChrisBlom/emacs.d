@@ -86,3 +86,6 @@
   ;;(set-default-font "Fira Code Light"))
 
 (hl-line-mode +1)
+
+;; enable smooth scrolling
+(pixel-scroll-precision-mode +1)

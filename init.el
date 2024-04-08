@@ -12,13 +12,12 @@
 
 (package-initialize)
 
+
 ;; make sure we can use packages
 (or (package-installed-p 'use-package)
     (progn
       (package-refresh-contents)
       (package-install 'use-package)))
-
-
 
 ;; only use use-package.el at compile-time
 (eval-when-compile (require 'use-package))
@@ -192,13 +191,6 @@
 
 (save-place-mode)
 
-;; (defhydra hydra/mc (:color pink)
-;;   ("a" mc/mark-previous-like-this "^")
-;;   ("b" mc/mark-previous-like-this "v")
-;;   ("q" nil "cancel")
-;; )
-
-
 (defun my/mc/mark-all-like-this ()
   "Find and mark all the parts of the buffer matching the currently active region"
   (interactive)
@@ -224,6 +216,7 @@
    ("C-c m s" . mc/sort-regions)
    ("C-c m r" . mc/reverse-regions)
    ("s-]" . mc/mark-next-like-this)
+   ("C-s-]" . mc/mark-next-word-like-this)
    ("s-[" . mc/mark-previous-like-this)
    ("s-{" . mc/unmark-previous-like-this)
    ("s-}" . mc/unmark-next-like-this)
@@ -242,12 +235,9 @@
     (setq mc--insert-character-char (or arg ?a))
     (mc/for-each-cursor-ordered
      (mc/execute-command-for-fake-cursor #'mc--insert-character-and-increase cursor)))
-
-  (key-chord-define global-map "[]" #'mc/mark-all-like-this-dwim))
+)
 
 (bind-key "C-c m a" #'my/mc/mark-all-like-this)
-
-
 
 (use-package change-inner
   :ensure t
@@ -263,19 +253,22 @@
     (add-hook 'java-mode-hook       (lambda () (paredit-mode +1)))
     (add-hook 'emacs-lisp-mode-hook (lambda () (paredit-mode +1)))
     (add-hook 'scheme-mode-hook     (lambda () (paredit-mode +1))))
+  :commands paredit-mode
+  :diminish ""
   :bind
   (:map paredit-mode-map
 	("M-d"       . live-paredit-forward-kill-sexp)
 	("M-h"       . live-paredit-backward-kill-sexp)
 
-	("s-<left>"  . backward-sexp)
+	("s-<left>"  . paredit-backward-up)
 	("s-<right>" . my/paredit-right)
-	("C-)"       . paredit-forward-slurp-sexp)
-	("C-("       . paredit-backward-slurp-sexp)
-	("M-("       . paredit-forward-barf-sexp)
-	("M-)"       . paredit-backward-barf-sexp)
-	("s-("       . paredit-forward)
-	("s-)"       . paredit-backward)
+        ("C-<right>" . paredit-forward-slurp-sexp)
+	("C-<left>"  . paredit-forward-barf-sexp)
+
+	("C-S-<right>" . paredit-backward-slurp-sexp)
+	("C-S-<left>"  . paredit-backward-barf-sexp)
+
+
 	("C-c ( a"   . align-cljlet)
 	("C-c ) s"   . paredit-splice-sexp-killing-forward)
 	("C-c ( s"   . paredit-splice-sexp-killing-backward)
@@ -284,13 +277,11 @@
 	("M-S"       . paredit-split-sexp)
 	("M-s"       . paredit-splice-sexp)
 	("M-j"       . paredit-join-sexps)
-	("M-T"       . transpose-sexps)
 	("M-P"       . live-paredit-previous-top-level-form)
 	("M-N"       . live-paredit-next-top-level-form)
+	("M-T"       . transpose-sexps)
 	("M-q"       . live-paredit-reindent-defun)
-	("M-\\"      . live-paredit-delete-horizontal-space))
-  :commands paredit-mode
-  :diminish ""
+ 	("M-\\"      . live-paredit-delete-horizontal-space))
   :config
   (progn
     ;; TODO extract useful stuff
@@ -301,7 +292,7 @@
     (defun my/paredit-wrap-round-from-behind ()
       (interactive)
       (forward-sexp -1)
-      (paredit-wrap-round)
+      (paredit-wwrap-round)
       (insert " ")
       (forward-char -1))
 
@@ -320,10 +311,10 @@
 	  (paredit-up/down +1 -1)
 	((scan-error) (paredit-forward))
 	((error) (progn (forward-word)
-			(setq a ex)))))
+			(setq a ex)))))))
 
-
-    ))
+;; (bind-keys :map projectile-command-map
+;; 	   ("r" .   projectile-replace))
 
 (use-package aggressive-indent
   :ensure t
@@ -369,7 +360,7 @@
      '(projectile-test-suffix-function  #'my/projectile-test-suffix))
 
     ;; to avoid make taking precedence over lein-midje
-    (remhash 'make projectile-project-types)
+ ;;   (remhash 'make projectile-project-types)
 
     (projectile-global-mode t)
     (setq projectile-mode-line-lighter "")
@@ -386,7 +377,7 @@
 (projectile-global-mode)
 ;; (use-package persp-projectile
 ;;   :config
-;;   (bind-keys
+;;   (bind-keysq
 ;;    :map persp-mode-map
 ;;    ("C-c w q" . persp-switch-quick)
 ;;    ("C-c w k" . persp-kill)))
@@ -409,30 +400,31 @@
 	 ("C-c h r" . helm-regexp)
 	 ("C-c h m" . helm-mark-ring)
 	 ("C-c h x" . helm-M-x)
-	 ("C-c h a" . helm-ag)
 	 ("C-c h b" . helm-buffers-list)
 	 ("C-c h i" . helm-imenu))
   :init
   (setq helm-adaptive-history-file (f-tmp-file "helm" "adaptive-history"))
   :config
   (progn
-    (require 'helm-config)
-    (require 'helm-ring)
-    (require 'helm-source)
-    (require 'helm-adaptive)
+    ;(require 'helm-config)
+    ;(require 'helm-ring)
+    ;(require 'helm-source)
+    ;(require 'helm-adaptive)
 
 
 
-    (setq helm-split-window-default-side 'below
-	  helm-split-window-in-side-p t
-	  helm-move-to-line-cycle-in-source t
-	  helm-display-header-line nil
-	  helm-candidate-separator "ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ")
-    (helm-autoresize-mode +1)))
+    ;; (setq helm-split-window-default-side 'below
+    ;; 	  helm-split-window-in-side-p t
+    ;; 	  helm-move-to-line-cycle-in-source t
+    ;; 	  helm-display-header-line nil
+    ;; 	  helm-candidate-separator "ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ")
+    ;(helm-autoresize-mode +1)
 
-(use-package helm-ag
-  :ensure t
-  :pin melpa-stable)
+    ))
+
+;; (use-package helm-ag
+;;   :ensure t
+;;   :pin melpa-stable)
 
 (use-package helm-rg
   :ensure t
@@ -655,10 +647,13 @@
 	   (f-join user-emacs-directory "etc" "snippets")
 	   ;(package-desc-dir (cadr (assoc 'yasnippet package-alist)))
 	   ;(package-desc-dir (cadr (assoc 'clojure-snippets package-alist)))
-	   )))
+	   ))
+    )
   :config
   (progn
     (setq yas-prompt-functions '(yas-ido-prompt yas-dropdown-prompt yas-completing-prompt yas-no-prompt) )
+
+    (yas/reload-all)
 ))
 
 (use-package dockerfile-mode
@@ -845,7 +840,7 @@
    ((eq system-type 'gnu/linux) (shell-command "gitg ."))))
 
 (defvar magit-buffer-lock-functions '())
-(bind-key "C-c g g" 'git-gui)
+(bind-key "C-c g g" 'my/git-gui)
 
 (use-package magit
   :ensure t
@@ -1077,11 +1072,35 @@
   (use-package flycheck-clj-kondo
     :ensure t)
 
-  (use-package clojure-mode
+  (defun configure-clojure-mode ()
+    (require 'flycheck-clj-kondo)
+    (add-hook 'clojure-mode-hook
+	      (lambda ()
+		(yas-minor-mode +1)
+		(yas-load-directory
+		 (f-join user-emacs-directory "etc" "snippets" "clojure-mode" ".")
+		 t)))
+
+
+    (put-clojure-indent 'time 2)
+    (put-clojure-indent 'section 'defun)
+    (put-clojure-indent 'letk 1)
+    (put-clojure-indent 'fact 'defun)
+    (put-clojure-indent 'defmodule '(1 nil nil (:defn)))
+    (put-clojure-indent 'for-map 'defun)
+    (put-clojure-indent 'match 'defun)
+    (put-clojure-indent 'facts 'defun)
+    (put-clojure-indent 'future-fact 'defun))
+
+
+  (use-package clojure-ts-mode
     :ensure t
-    :commands clojure-mode
-    :init
-    (defface clojure-lvar-face
+    :commands clojure-ts-mode
+    :config
+    (configure-clojure-mode))
+
+
+      (defface clojure-lvar-face
       '((t (:inherit font-lock-keyword-face)))
       "Face used to font-lock logic variables (for datomic and cascalog)"
       :group 'clojure
@@ -1093,156 +1112,134 @@
       "Face used to highligt notes in comments"
       :group 'clojure
       :package-version '(clojure-mode . "3.0.0"))
-
     (defvar note-face 'note-face)
-
     (set-face-attribute note-face nil
 			:background "DarkOrange"
 			:foreground "Black")
 
+  (use-package clojure-mode
+    :ensure t
+    :commands clojure-mode
     :config
-    (require 'flycheck-clj-kondo)
-    (add-hook 'clojure-mode-hook (lambda ()
-				   (yas-minor-mode +1)
-				   (yas-load-directory
-				    (f-join user-emacs-directory "etc" "snippets" "clojure-mode" ".")
-				    t
-				    )))
+    (progn
+      (font-lock-add-keywords 'clojure-mode `((,(concat "\\<"
+							"\\?[a-z0-9-\\+]+"
+							"\\>")
+	  0
+	  font-lock-keyword-face)))
+
+      (font-lock-add-keywords
+       'cider-mode
+       `((,(concat "\\<"
+		   "\\?[a-z0-9-]+"
+		   "\\>")
+	  0
+	  font-lock-keyword-face)))
+
+      (font-lock-add-keywords
+       'clojure-mode
+       `((,(regexp-opt (list "GET" "PUT" "POST" "ANY" "OPTIONS" "DELETE") 'words)
+	  0
+	  font-lock-preprocessor-face)))
+
+      (font-lock-add-keywords
+       'clojure-mode
+       `((,(concat "\\<"
+		   (rx "./")
+		   "[a-z0-9-_]+"
+		   "\\>")
+	  0
+	  font-lock-warning-face)))
 
 
-    (put-clojure-indent 'time 2)
-    (put-clojure-indent 'section 'defun)
-    (put-clojure-indent 'letk 1)
-    (put-clojure-indent 'fact 'defun)
-    (put-clojure-indent 'defmodule '(1 nil nil (:defn)))
-    (put-clojure-indent 'for-map 'defun)
-    (put-clojure-indent 'match 'defun)
-    (put-clojure-indent 'facts 'defun)
-    (put-clojure-indent 'future-fact 'defun)
-					;(put-clojure-indent 'facts 'defun)
-    ;; fontlock logic vars
-    (font-lock-add-keywords
-     'clojure-mode
-     `((,(concat "\\<"
-		 "\\?[a-z0-9-\\+]+"
-		 "\\>")
-	0
-	font-lock-keyword-face)))
+      ;; invocations
+      (font-lock-add-keywords 'clojure-mode
+			      `((,(concat "(\\(?:\.*/\\)?"
+					  (regexp-opt '("facts?") t)
+					  "\\>")
+				 1 font-lock-builtin-face)))
 
-    (font-lock-add-keywords
-     'cider-mode
-     `((,(concat "\\<"
-		 "\\?[a-z0-9-]+"
-		 "\\>")
-	0
-	font-lock-keyword-face)))
+      ;; anywhere
+      (font-lock-add-keywords 'clojure-mode
+			      `((,(concat "\\<"
+					  (regexp-opt '("=>" "=not=>" "=contains=>" "run!" "getx" "getx-in") t)
+					  "\\>")
+				 1 font-lock-builtin-face)))
 
-    (font-lock-add-keywords
-     'clojure-mode
-     `((,(regexp-opt (list "GET" "PUT" "POST" "ANY" "OPTIONS" "DELETE") 'words)
-	0
-	font-lock-preprocessor-face)))
+      ;; (font-lock-add-keywords 'clojure-mode
+      ;; 			       `((,(rx "#_"
+      ;; 				       (or
+      ;; 					(+ (syntax \w))
+      ;; 					(+ (syntax \s))
+      ;; 					(sequence
+      ;; 					 (syntax \( )
+      ;; 					 (minimal-match (regexp ".*"))
+      ;; 					 (syntax \)))))
+      ;; 				  1 font-lock-doc-face 'set)))
 
-    (font-lock-add-keywords
-     'clojure-mode
-     `((,(concat "\\<"
-		 (rx "./")
-		 "[a-z0-9-_]+"
-		 "\\>")
-	0
-	font-lock-warning-face)))
+      ;; (font-lock-add-keywords
+      ;;  'clojure-mode
+      ;;  `((,(rx "#_"
+      ;; 	     (or
+      ;; 	      (+ (syntax \w))
+      ;; 	      (+ (syntax \s))
+      ;; 	      (sequence "(" (regexp ".*") ")")
+      ;; 	      (sequence "[" (regexp ".*") "]")
+      ;; 	      (sequence "{" (regexp ".*") "}")))
+      ;; 	0
+      ;; 	font-lock-warning-face)))
 
+      (font-lock-add-keywords
+       'clojure-mode
+       `((,(concat
+	    "\\<"
+	    (regexp-opt '("TODO" "REVIEW" "XXX" "QUESTION" "BUG" "NOTE"))
+	    "\\>")
+	  0
+	  note-face t)))
 
-    ;; invocations
-    (font-lock-add-keywords 'clojure-mode
-			    `((,(concat "(\\(?:\.*/\\)?"
-					(regexp-opt '("facts?") t)
-					"\\>")
-			       1 font-lock-builtin-face)))
+      (font-lock-add-keywords
+       'clojure-mode
+       `((,(concat "\\<" (regexp-opt '("@" "$")) "\\>")
+	  0
+	  font-lock-preprocessor-face)))
 
-    ;; anywhere
-    (font-lock-add-keywords 'clojure-mode
-			    `((,(concat "\\<"
-					(regexp-opt '("=>" "=not=>" "=contains=>" "run!" "getx" "getx-in") t)
-					"\\>")
-			       1 font-lock-builtin-face)))
+      (defun synth-toggle-clojure-ignore-next-form ()
+	"toggle #_"
+	(interactive)
+	(save-excursion
+	  (goto-char (1- (paredit-point-at-sexp-start)))
+	  (if (char-equal ?_  (preceding-char))
+	      (delete-backward-char 2)
+	    (insert-string "#_"))))
 
-    ;; (font-lock-add-keywords 'clojure-mode
-    ;; 			       `((,(rx "#_"
-    ;; 				       (or
-    ;; 					(+ (syntax \w))
-    ;; 					(+ (syntax \s))
-    ;; 					(sequence
-    ;; 					 (syntax \( )
-    ;; 					 (minimal-match (regexp ".*"))
-    ;; 					 (syntax \)))))
-    ;; 				  1 font-lock-doc-face 'set)))
+      (defun my/no-cider-connection ()
+	(interactive)
+	(message "Cider is not connected"))
 
-    ;; (font-lock-add-keywords
-    ;;  'clojure-mode
-    ;;  `((,(rx "#_"
-    ;; 	     (or
-    ;; 	      (+ (syntax \w))
-    ;; 	      (+ (syntax \s))
-    ;; 	      (sequence "(" (regexp ".*") ")")
-    ;; 	      (sequence "[" (regexp ".*") "]")
-    ;; 	      (sequence "{" (regexp ".*") "}")))
-    ;; 	0
-    ;; 	font-lock-warning-face)))
-
-    (font-lock-add-keywords
-     'clojure-mode
-     `((,(concat
-	  "\\<"
-	  (regexp-opt '("TODO" "REVIEW" "XXX" "QUESTION" "BUG" "NOTE"))
-	  "\\>")
-	0
-	note-face t)))
-
-    (font-lock-add-keywords
-     'clojure-mode
-     `((,(concat "\\<" (regexp-opt '("@" "$")) "\\>")
-	0
-	font-lock-preprocessor-face)))
-
-    (use-package clojure-mode-extra-font-locking :ensure t)
-
-    (require 'clojure-mode-extra-font-locking)
-    (use-package align-cljlet :ensure t)
-    (defun synth-toggle-clojure-ignore-next-form ()
-      "toggle #_"
-      (interactive)
-      (save-excursion
-	(goto-char (1- (paredit-point-at-sexp-start)))
-	(if (char-equal ?_  (preceding-char))
-	    (delete-backward-char 2)
-	  (insert-string "#_"))))
-    (defun my/no-cider-connection ()
-      (interactive)
-      (message "Cider is not connected"))
-    (bind-keys
-     :map clojure-mode-map
-     ("C-c p"   . nil) ;; conflict with projectile
-     ("C-c C-j" . cider-jack-in)
-     ("C-c C-k" . (lambda () (interactive)
-		    (cider-jack-in)
-		    (cider-eval-buffer)))
-     ("C-c M-c" . cider-connect)
-     ("C-x C-e" . my/no-cider-connection)
-     ("C-c C-p" . my/no-cider-connection)
-     ("C-c C-z" . cider-connect)
-     ("C-c C-3" . synth-toggle-clojure-ignore-next-form))
-    ;; compjure route formatting
-    (define-clojure-indent
-      (defroutes 'defun)
-      (GET 2)
-      (POST 2)
-      (PUT 2)
-      (DELETE 2)
-      (HEAD 2)
-      (ANY 2)
-      (OPTIONS 2)
-      (context 2)))
+      (bind-keys
+       :map clojure-mode-map
+       ("C-c p"   . nil) ;; conflict with projectile
+       ("C-c C-j" . cider-jack-in)
+       ("C-c C-k" . (lambda () (interactive)
+		      (cider-jack-in)
+		      (cider-eval-buffer)))
+       ("C-c M-c" . cider-connect)
+       ("C-x C-e" . my/no-cider-connection)
+       ("C-c C-p" . my/no-cider-connection)
+       ("C-c C-z" . cider-connect)
+       ("C-c C-3" . synth-toggle-clojure-ignore-next-form))
+      ;; compjure route formatting
+      (define-clojure-indent
+       (defroutes 'defun)
+       (GET 2)
+       (POST 2)
+       (PUT 2)
+       (DELETE 2)
+       (HEAD 2)
+       (ANY 2)
+       (OPTIONS 2)
+       (context 2))))
 
   (defhydra
     hydra-refactor (:color pink)
@@ -1343,7 +1340,7 @@
 		(auto-highlight-symbol-mode +1)
 		(yas-minor-mode +1)
 		(setq buffer-save-without-query t)
-		(clj-refactor-mode +1)
+		;(clj-refactor-mode +1)
 		(prettify-symbols-mode +1)))
     :config
     (setq cider-prefer-local-resources t
@@ -1370,6 +1367,7 @@
 	  cider-repl-use-clojure-font-lock nil
 	  cider-repl-display-help-banner nil
 	  cider-repl-pop-to-buffer-on-connect nil
+	  cider-clojure-cli-aliases ":dev:test"
 	  ;; nrepl
 	  nrepl-buffer-name-show-port t
 	  nrepl-log-messages nil
@@ -1418,6 +1416,17 @@
     "Evaluate the sexp preceding point and pprint its value in a popup buffer."
     (interactive)
     (cider--pprint-eval-form (cider-last-sexp)))
+
+  (defun my/cider-eval-last-sexp-tap (&optional output-to-current-buffer)
+    "Evaluate the expression preceding point, and send it to tap
+     If invoked with OUTPUT-TO-CURRENT-BUFFER, print the result in the current
+     buffer."
+  (interactive "P")
+  (cider-interactive-eval (format "(doto %s tap>)" (cider-last-sexp))
+                          (when output-to-current-buffer (cider-eval-print-handler))
+                           (cider-last-sexp 'bound)
+                          (cider--nrepl-pr-request-map)))
+
 
   (use-package cider-eval-sexp-fu
     :ensure t)
@@ -2030,8 +2039,8 @@ open and unsaved."
 	("<s-right>" . drag-stuff-right)
 	("<s-down>" . drag-stuff-down)))
 
-(bind-key "C-S-p" 'drag-stuff-up)
 (bind-key "C-S-n" 'drag-stuff-down)
+(bind-key "C-S-p" 'drag-stuff-up)
 (bind-key "C-S-<up>" 'drag-stuff-up)
 (bind-key "C-S-f" 'drag-sexp-right)
 (bind-key "C-S-<down>" 'drag-stuff-down)
@@ -2050,10 +2059,11 @@ open and unsaved."
 (use-package string-inflection :ensure t
   :bind
   (("C-c c c" . string-inflection-camelcase)
+   ("C-c c u" . string-inflection-underscore)
+   ("C-c c U" . string-inflection-upcase)
    ("C-c c k" . string-inflection-kebab-case)
+   ("C-c c ." . string-inflection-dot-case)
    ("C-c c n" . string-inflection-all-cycle)))
-
-backup-directory-alist
 
 (defun string-inflection-underscore-function (str)
   "FooBar => foo_bar"
@@ -2077,7 +2087,6 @@ backup-directory-alist
   (insert (string-inflection-dot-case-function (string-inflection-get-current-word t))))
 
 
-
 (defhydra my/string-inflection (:color pink)
   ("SPC" string-inflection-all-cycle "cycle")
   ("." string-inflection-dot-case "dot.case")
@@ -2094,10 +2103,6 @@ backup-directory-alist
 ;;   :interpreter
 ;;   ("scala" . scala-mode))
 
-
-(use-package ensime
-  :ensure t
-  :pin melpa-stable)
 
 (use-package go-mode
   :ensure t
@@ -2161,27 +2166,9 @@ backup-directory-alist
           :history 'helm-ag--helm-history)))
 
 
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(custom-safe-themes
-   '("c74e83f8aa4c78a121b52146eadb792c9facc5b1f02c917e3dbb454fca931223" "b7a1f0a57d4a656fa515253498483617b34f12606e58e91170ea31ab1f5d9b4d" "81b018b82a0d97ef8f17acda95eec2a3a96138306fbf5df8f217307325c729f8" "6a9b145b4c27e07c107f7d53793f46aac3dfec599dc71917286878d3d86b676d" "083545312c43a01f9b7e8ecf4e1ae067e907ae79f3e4b385679579ca9e78f5ab" "ba9823e6a937d326822bea7a00c3952c6ae872c39d311eede41a041037549ac7" "4980e5ddaae985e4bae004280bd343721271ebb28f22b3e3b2427443e748cd3f" "8db4b03b9ae654d4a57804286eb3e332725c84d7cdab38463cb6b97d5762ad26" "a27c00821ccfd5a78b01e4f35dc056706dd9ede09a8b90c6955ae6a390eb1c1e" "3c83b3676d796422704082049fc38b6966bcad960f896669dfc21a7a37a748fa" "50598275d5ba41f59b9591203fdbf84c20deed67d5aa64ef93dd761c453f0e98" "91aecf8e42f1174c029f585d3a42420392479f824e325bf62184aa3b783e3564" "6a37be365d1d95fad2f4d185e51928c789ef7a4ccf17e7ca13ad63a8bf5b922f" default))
- '(haskell-interactive-popup-error nil)
- '(haskell-process-auto-import-loaded-modules t)
- '(haskell-process-log t)
- '(haskell-process-suggest-remove-import-lines t)
- '(package-selected-packages
-   '(lsp-mode clojure-mode-extra-font-locking ztree zoom-window window-number which-key visible-mark use-package undo-tree terraform-mode string-inflection sr-speedbar smooth-scrolling smex smart-mode-line slime skewer-mode rust-mode ranger rainbow-mode rainbow-delimiters poly-ansible paxedit password-generator paradox nav multiple-cursors magit lsp-ui lsp-treemacs logstash-conf key-chord json-mode jq-mode jedi javap-mode inflections inf-clojure indent-guide image+ idomenu ido-vertical-mode ido-completing-read+ highlight-stages highlight-quoted highlight-parentheses highlight-numbers highlight-indentation highlight-indent-guides highlight-defined highlight-blocks highlight helm-rg helm-projectile helm-descbinds helm-company helm-ag graphql goto-last-change go-mode glsl-mode git-timemachine git-link git-gutter geiser flycheck-joker flycheck-clj-kondo flx-ido fish-mode fancy-narrow evil-lisp-state esup ensime elisp-slime-nav edn edit-server drag-stuff dockerfile-mode diminish deadgrep dante csv-mode counsel company-restclient company-quickhelp company-ghci company-flx company-ansible clojure-snippets circe cider-eval-sexp-fu cider change-inner buffer-move browse-url-dwim browse-at-remote auto-highlight-symbol align-cljlet aggressive-indent ag))
- '(paradox-github-token t)
- '(projectile-test-prefix-function #'my/projectile-test-prefix)
- '(projectile-test-suffix-function #'my/projectile-test-suffix))
-
-
 (defun my/small-font ()
   (interactive)
-  (set-face-attribute 'default nil :family "Fira Code Light" :height 100 :weight 'light :width 'extra-condensed)
+  (set-face-attribute 'default nil :family "Fira Code Light" :height 100)
   (set-frame-parameter nil 'fullscreen 'maximized)
   )
 
@@ -2344,7 +2331,7 @@ WARNING: this is a simple implementation. The chance of generating the same UUID
 (defun my/decrement-number-at-point (&optional arg)
   "Decrement the number forward from point by 'arg'."
   (interactive "p*")
-  (my/increment-number-at-point (- (if arg arg 1))))
+  (my/increment-number-at-point (- (if arg arg 0))))
 
 (bind-key "C-M-=" 'my/increment-number-at-point)
 (bind-key "C-M--" 'my/decrement-number-at-point)
@@ -2359,10 +2346,8 @@ WARNING: this is a simple implementation. The chance of generating the same UUID
 
 
 (use-package highlight-indent-guides :ensure t)
-
 (setq highlight-indent-guides-method 'fill)
 
-(add-hook 'prog-mode-hook 'highlight-indentation-mode)
 
 (use-package visual-indentation-mode)
 
@@ -2378,7 +2363,7 @@ WARNING: this is a simple implementation. The chance of generating the same UUID
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- )
+ '(line-number ((t (:inherit (shadow default) :foreground "unemphasizedSelectedContentBackgroundColor" :height 0.9)))))
 
 (defun cider-jack-in-bb (params)
   "Start an nREPL server with Babashka for the current project and connect to it.
@@ -2417,21 +2402,29 @@ With the prefix argument, prompt for all these parameters."
 
 (use-package jq-mode :ensure t)
 
+
 (use-package lsp-mode
-;  :pin  melpa-stable
+  :ensure t
   :init
   ;; set prefix for lsp-command-keymap (few alternatives - "C-l", "C-c l")
   (setq lsp-keymap-prefix "C-c l")
   :hook (;; replace XXX-mode with concrete major-mode(e. g. python-mode)
+         (XXX-mode . lsp)
          ;; if you want which-key integration
          (lsp-mode . lsp-enable-which-key-integration))
-;  :commands lsp
-  )
+  :commands lsp)
+
+;; optionally
+(use-package lsp-ui :commands lsp-ui-mode :ensure t)
+;; if you are helm user
+(use-package helm-lsp :commands helm-lsp-workspace-symbol)
+;; if you are ivy user
+(use-package lsp-ivy :commands lsp-ivy-workspace-symbol)
+(use-package lsp-treemacs :commands lsp-treemacs-errors-list)
+
+
 
 (use-package rainbow-mode :ensure t)
-
-(use-package logstash-conf)
-(setq logstash-indent 2)
 
 
 ;; optionally
@@ -2441,7 +2434,7 @@ With the prefix argument, prompt for all these parameters."
 ;;(use-package lsp-treemacs :ensure t)
 
 
-(setq lsp-clojure-custom-server-command '("bash" "-c" "/home/chris/bin/clojure-lsp"))
+
 (setq lsp-lens-enable nil)
 
 
@@ -2455,12 +2448,48 @@ With the prefix argument, prompt for all these parameters."
 
 
 
-  ;; start the server so clients can connect to it
+
 (require 'server)
 
-(if (not (server-running-p))
-    (progn
-      (message "Starting server")
-      (server-start)
-      (message "Started server"))
+
+(use-package treemacs
+  :ensure t)
+
+(use-package treemacs-projectile
+  :ensure t)
+
+
+;; start the server so clients can connect to it
+(setq server-name "server")
+(setq server-socket-dir "/tmp/emacs-server")
+
+(when (not (server-running-p))
+  (progn
+    (message "Starting server")
+    (server-start)
+    (message "Started server"))
   (message "Server already running"))
+
+
+
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(custom-safe-themes
+   '("c74e83f8aa4c78a121b52146eadb792c9facc5b1f02c917e3dbb454fca931223" "b7a1f0a57d4a656fa515253498483617b34f12606e58e91170ea31ab1f5d9b4d" "81b018b82a0d97ef8f17acda95eec2a3a96138306fbf5df8f217307325c729f8" "6a9b145b4c27e07c107f7d53793f46aac3dfec599dc71917286878d3d86b676d" "083545312c43a01f9b7e8ecf4e1ae067e907ae79f3e4b385679579ca9e78f5ab" "ba9823e6a937d326822bea7a00c3952c6ae872c39d311eede41a041037549ac7" "4980e5ddaae985e4bae004280bd343721271ebb28f22b3e3b2427443e748cd3f" "8db4b03b9ae654d4a57804286eb3e332725c84d7cdab38463cb6b97d5762ad26" "a27c00821ccfd5a78b01e4f35dc056706dd9ede09a8b90c6955ae6a390eb1c1e" "3c83b3676d796422704082049fc38b6966bcad960f896669dfc21a7a37a748fa" "50598275d5ba41f59b9591203fdbf84c20deed67d5aa64ef93dd761c453f0e98" "91aecf8e42f1174c029f585d3a42420392479f824e325bf62184aa3b783e3564" "6a37be365d1d95fad2f4d185e51928c789ef7a4ccf17e7ca13ad63a8bf5b922f" default))
+ '(haskell-interactive-popup-error nil)
+ '(haskell-process-auto-import-loaded-modules t)
+ '(haskell-process-log t)
+ '(haskell-process-suggest-remove-import-lines t)
+ '(package-selected-packages
+   '(angular-mode charmap helm-unicode treemacs-magit treemacs-git-mode treemacs-projectile treemacs ox-clip highlight-indent-guides ansible-doc ansible clojure-ts-mode kotlin-mode lsp-mode clojure-mode-extra-font-locking ztree zoom-window window-number which-key visible-mark use-package undo-tree terraform-mode string-inflection sr-speedbar smooth-scrolling smex smart-mode-line slime skewer-mode rust-mode ranger rainbow-mode rainbow-delimiters poly-ansible paxedit password-generator paradox nav multiple-cursors magit lsp-ui key-chord json-mode jq-mode jedi javap-mode inflections inf-clojure indent-guide image+ idomenu ido-vertical-mode ido-completing-read+ highlight-stages highlight-quoted highlight-parentheses highlight-numbers highlight-defined highlight-blocks highlight helm-rg helm-projectile helm-descbinds helm-company helm-ag graphql goto-last-change go-mode glsl-mode git-timemachine git-link git-gutter geiser flycheck-joker flycheck-clj-kondo flx-ido fish-mode fancy-narrow evil-lisp-state esup ensime elisp-slime-nav edn edit-server drag-stuff dockerfile-mode diminish deadgrep dante csv-mode counsel company-restclient company-quickhelp company-ghci company-flx company-ansible clojure-snippets circe cider-eval-sexp-fu cider change-inner buffer-move browse-url-dwim browse-at-remote auto-highlight-symbol align-cljlet aggressive-indent ag))
+ '(paradox-github-token t)
+ '(projectile-test-prefix-function #'my/projectile-test-prefix)
+ '(projectile-test-suffix-function #'my/projectile-test-suffix))
+
+
+
+
+(bind-key "M-g g" #'goto-line)
